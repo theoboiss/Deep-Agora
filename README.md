@@ -12,4 +12,4 @@ The collaboration with the CESR resulted in the Agora software which simultaneou
 The objective of this project is to do a complete overhaul of the Agora software using a new approach oriented towards deep learning.
 
 ## Further information:
-See Deep_Agora_DOC: https://github.com/theo-boi/Deep-Agora_DOC.
+See Deep-Agora_DOC: https://github.com/theo-boi/Deep-Agora_DOC.
