@@ -2,7 +2,7 @@
 ### Supervised by Prof. Dr. Jean-Yves RAMEL and conducted by Théo BOISSEAU - Polytech Tours
 
 
-# Description:
+## Description:
 Overhaul of Agora from the PaRADIIT Project: Analyzing Pattern Redundancy in texts of document images using Incremental Segmentation.
 
 PaRADIIT is a project initiated and sponsored by 2 successive Google DH awards. It aims to turn ancient books, especially from the Renaissance, into accessible digital libraries.
@@ -11,5 +11,5 @@ The collaboration with the CESR resulted in the Agora software which simultaneou
 
 The objective of this project is to do a complete overhaul of the Agora software using a new approach oriented towards deep learning.
 
-# Further information:
+## Further information:
 See Deep_Agora_DOC: https://github.com/theo-boi/Deep-Agora_DOC.
