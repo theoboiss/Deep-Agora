@@ -1,3 +1,8 @@
+# Dataset directories
+_*_/
+raw_datasets/
+predictions/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
