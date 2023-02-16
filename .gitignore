@@ -1,3 +1,6 @@
+# Models
+*.pth
+
 # Dataset directories
 _*_/
 raw_datasets/
