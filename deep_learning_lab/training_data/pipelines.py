@@ -3,11 +3,9 @@
 Automation of training data preparation
 =======================================
 
-This module offers a pipeline designed to build training data under the right
+This module offers a simple pipeline designed to build training data under the right
 format for dhSegment models.
 
-Its interactive functionnality allows the user to design diverse training
-dataset according to the elements of content they want to extract.
 For the moment, it can only patch datasets under the PAGE format.
 
 """
@@ -18,182 +16,108 @@ from time import sleep
 from training_data.patch import DataStructure, DataPatcher
 
 
-RAW_DATA_DIR = "raw_datasets" # "" if deactivated
+RAW_DATA_DIR = "raw_datasets" # "" if current directory
 
 
-def page_data_structure(name_dataset):
-    dir_original_data = name_dataset
-    data = DataStructure(
-        dir_data= dir_original_data,
-        dir_images= "",
-        dir_annotations= "page"
-    )
-    return data
+_BCS = "Baseline Competition - Simple Documents"
+_BCC = "Baseline Competition - Complex Documents"
+
+def _page_data_dict(name_dataset):
+    """
+    Create the parameters for a new DataStructure object that meets the PAGE specifications.
+    """
+    return {'dir_data' : name_dataset, 'dir_images' : "", 'dir_annotations' : "page"}
+
+DATASETS = {
+    'reid': {
+        'dir_data' : os.path.join(RAW_DATA_DIR, "REID2019"),
+        'dir_images' : "REID2019_ExampleSet",
+        'dir_annotations' : "REID2019_ExampleSet"
+    },
+    'fcr': _page_data_dict(os.path.join(RAW_DATA_DIR,"FCR_500","data")),
+    'bcs_a': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCS,"ABP_FirstTestCollection")),
+    'bcs_b': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCS,"Bohisto_Bozen_SetP")),
+    'bcs_e': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCS,"EPFL_VTM_FirstTestCollection")),
+    'bcs_h': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCS,"HUB_Berlin_Humboldt")),
+    'bcs_n': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCS,"NAF_FirstTestCollection")),
+    'bcs_s': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCS,"StAM_Marburg_Grimm_SetP")),
+    'bcs_u': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCS,"UCL_Bentham_SetP")),
+    'bcs_un': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCS,"unibas_e-Manuscripta")),
+    'bcc_a': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCC,"ABP_FirstTestCollection")),
+    'bcc_b': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCC,"Bohisto_Bozen_SetP")),
+    'bcc_bh': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCC,"BHIC_Akten")),
+    'bcc_e': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCC,"EPFL_VTM_FirstTestCollection")),
+    'bcc_h': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCC,"HUB_Berlin_Humboldt")),
+    'bcc_n': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCC,"NAF_FirstTestCollection")),
+    'bcc_s': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCC,"StAM_Marburg_Grimm_SetP")),
+    'bcc_u': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCC,"UCL_Bentham_SetP")),
+    'bcc_un': _page_data_dict(os.path.join(RAW_DATA_DIR,_BCC,"unibas_e-Manuscripta")),
+    '_data_': {'dir_data': "data", 'dir_images': "images",'dir_labels': "labels"},
+}
+
+
 
 def implementDataStructure(name_dataset):
+    """
+    Create the DataStructure object corresponding to name_dataset.
+    """
     name_dataset = name_dataset.lower()
     
-    if name_dataset == 'fcr':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "FCR_500",
-            "data"
-        ))
-
-    elif name_dataset == 'bcs_a':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Simple Documents",
-            "ABP_FirstTestCollection"
-        ))
-    elif name_dataset == 'bcs_b':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Simple Documents",
-            "Bohisto_Bozen_SetP"
-        ))
-    elif name_dataset == 'bcs_e':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Simple Documents",
-            "EPFL_VTM_FirstTestCollection"
-        ))
-    elif name_dataset == 'bcs_h':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Simple Documents",
-            "HUB_Berlin_Humboldt"
-        ))
-    elif name_dataset == 'bcs_n':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Simple Documents",
-            "NAF_FirstTestCollection"
-        ))
-    elif name_dataset == 'bcs_s':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Simple Documents",
-            "StAM_Marburg_Grimm_SetP"
-        ))
-    elif name_dataset == 'bcs_u':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Simple Documents",
-            "UCL_Bentham_SetP"
-        ))
-    elif name_dataset == 'bcs_un':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Simple Documents",
-            "unibas_e-Manuscripta"
-        ))
-
-    elif name_dataset == 'bcc_a':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Complex Documents",
-            "ABP_FirstTestCollection"
-        ))
-    elif name_dataset == 'bcc_b':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Complex Documents",
-            "Bohisto_Bozen_SetP"
-        ))
-    elif name_dataset == 'bcc_bh':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Complex Documents",
-            "BHIC_Akten"
-        ))
-    elif name_dataset == 'bcc_e':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Complex Documents",
-            "EPFL_VTM_FirstTestCollection"
-        ))
-    elif name_dataset == 'bcc_h':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Complex Documents",
-            "HUB_Berlin_Humboldt"
-        ))
-    elif name_dataset == 'bcc_n':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Complex Documents",
-            "NAF_FirstTestCollection"
-        ))
-    elif name_dataset == 'bcc_s':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Complex Documents",
-            "StAM_Marburg_Grimm_SetP"
-        ))
-    elif name_dataset == 'bcc_u':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Complex Documents",
-            "UCL_Bentham_SetP"
-        ))
-    elif name_dataset == 'bcc_un':
-        data = page_data_structure(os.path.join(
-            RAW_DATA_DIR,
-            "Baseline Competition - Complex Documents",
-            "unibas_e-Manuscripta"
-        ))
-
-    elif name_dataset == 'reid':
-        dir_original_data = os.path.join(
-            RAW_DATA_DIR,
-            "REID2019"
-        )
-        data = DataStructure(
-            dir_data= dir_original_data,
-            dir_images= "REID2019_ExampleSet",
-            dir_annotations= "REID2019_ExampleSet"
-        )
-
-    elif name_dataset == '_data_':
-        dir_original_data = "data"
-        data = DataStructure(
-            dir_data= dir_original_data,
-            dir_images= "images",
-            dir_labels= "labels"
-        )
-    
+    if name_dataset in DATASETS:
+        data = DataStructure(**DATASETS[name_dataset])
     else:
-        raise NotImplementedError(f"{name_dataset} have not been implemented.")
+        raise NotImplementedError(f"'{name_dataset}' dataset have not been implemented.")
     return data
 
+
 def selectAnnotationsFrom(original_dataset):
+    """
+    Allow the users to extract and select the annotations they want to convert into masks from the dataset.
+    The selected annotations can be either a single one or an arrangement of several.
+    The extraction and selection is done within the console.
+    """
     data = implementDataStructure(original_dataset)
     chosen_annotations = []
     
     print(f"ANNOTATION SELECTION FOR THE {original_dataset.upper()} DATASET")
     print()
-    dp = DataPatcher(data)
+    patcher = DataPatcher(data)
 
     valid = False
     while not valid:
-        chosen_annotations.append(dp.annotationsAnalysis())
+        chosen_annotations.append(patcher.annotationsAnalysis())
         decision = input("Continue ([y]/n)? ").lower()
         print()
         if decision == 'n' or decision == 'no':
             valid = True
     return chosen_annotations
 
-def annotationsToMasks(src, dest= "_data_", names_labels= None, verbose= True, debug= False):
+
+def annotationsToMasks(src, dest= "_data_", names_labels= None, verbose= 0):
+    """
+    Convert the dataset located at src to a compatible one located at dest.
+    
+    names_labels: the name of the labels to convert
+    verbose: the level of verbose. 0 is none, 1 is message only, 2 is message and progress bar, 3 is message and debug, and 4+ is all.
+    """
+    print_msg = (verbose >= 1)
+    print_progress = (verbose == 2 or verbose >= 4)
+    print_debug = (verbose >= 4)
+    
     src_data = implementDataStructure(src)
     dest_data = implementDataStructure(dest)
 
-    if verbose:
+    if print_msg:
         print(f"PATCHING {src.upper()} WITH '{', '.join(names_labels) if names_labels else 'NO'}' SPECIFIED LABEL{'S' if len(names_labels)>1 else ''}")
         sleep(0.25)
-    dp = DataPatcher(src_data, dest_data)
-    dp.patch(names_labels= names_labels, verbose= debug, debug= debug)
-    if debug:
+    patcher = DataPatcher(src_data, dest_data)
+    patcher.patch(
+        size_img= (637, 900),
+        names_labels= names_labels,
+        verbose= print_progress,
+        debug_annotations= print_debug
+    )
+    if print_progress & print_debug:
         sleep(0.25)
         print()
     # Keep AnnotationReader/Writer in mind for specific types of datasets

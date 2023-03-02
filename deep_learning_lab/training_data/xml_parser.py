@@ -1,5 +1,10 @@
 """
-Operation module used to parse XML files.
+=======================================
+XML Parser and Miner
+=======================================
+
+This operation module offers functions designed to parse XML files and extract specific data inside.
+
 """
 
 from xml.etree import ElementTree
@@ -11,6 +16,7 @@ def _pathToXMLRoot_(path: str):
     """
     tree = ElementTree.parse(path)
     return tree.getroot()
+
 
 def _parseTagsNamespace_(path: str, tag_maps= dict()) -> dict:
     """
@@ -25,17 +31,21 @@ def _parseTagsNamespace_(path: str, tag_maps= dict()) -> dict:
             tag_maps[tag].append(namespace)
     return tag_maps
 
+
 def _addAttributeValuesFromTag_(tag, attribute, tag_map, list, root):
     for namespace in tag_map:
         for tag_root in root.findall(namespace + tag):
             list.append(extractAttributeElem(tag_root, attribute))
     return list
 
+
 def _parseNamespace_(raw_tag: str):
     return raw_tag[:raw_tag.find('}')+1]
 
+
 def _parseTag_(raw_tag: str):
     return raw_tag[raw_tag.find('}')+1:]
+
 
 def _cleanTag_(elem: ElementTree):
     """
@@ -43,6 +53,7 @@ def _cleanTag_(elem: ElementTree):
     """
     raw_tag = elem.tag
     return _parseTag_(raw_tag), _parseNamespace_(raw_tag)
+
 
 def collectAllTags(paths_annotations: list, warning= True) -> list:
     """
@@ -57,8 +68,10 @@ def collectAllTags(paths_annotations: list, warning= True) -> list:
                 print(f"WARNING: The XML file {path} could not be parsed because it is malformed.")
     return tag_maps
 
+
 def extractAttributeElem(elem: ElementTree, attribute):
     return elem.get(attribute)
+
 
 def extractTagElem(path: str, tag: str, tag_map: str):
     try:
@@ -70,6 +83,7 @@ def extractTagElem(path: str, tag: str, tag_map: str):
     except ElementTree.ParseError as p:
         raise Exception(f"WARNING: The XML file {path} could not be parsed because it is malformed.")
     return elem_tag
+
 
 def extractAttributesTag(tag, attributes, perimeter_tags, tag_maps, root):
     dictionary = {pt : list() for pt in perimeter_tags}

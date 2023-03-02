@@ -1,21 +1,62 @@
+"""
+=======================================
+Data set patching for dhSegment
+=======================================
+
+This module offers tools to build training data under the right
+format for dhSegment models.
+
+It converts a dataset with serialized annotations into a dataset
+that meets the requirements of dhSegment.
+
+Its interactive functionnality allows the user to design diverse training
+datasets according to the elements of content they want to extract.
+For the moment, it can only patch datasets under the PAGE format.
+
+"""
+
 import numpy as np
 import pandas as pd
 from PIL import Image, ImageDraw
 from tqdm import tqdm
 
-import os, glob, shutil
+import os, glob
 
 from dh_segment_torch.data import ColorLabels, all_one_hot_and_colors, get_all_one_hots
 
 from training_data.xml_parser import *
 
 
-TEMP_ROOT_DIR = "" # "" if deactivated
+TEMP_ROOT_DIR = "" # "" if deactivated. Useful for Google Collab
 DESC_PROGRESSBAR_IMAGES = "Building label masks "
 DESC_PROGRESSBAR_MASKS =  "Copying images       "
 
 
-class DataStructure(object):
+
+def resizeImgAndSave(img: Image, path, extension, width= None, height= None):
+    """
+    Resize the PIL.Image and save it to path with the specified extension.
+    """
+    # Resize the image
+    if width or height:
+        if height and not width:
+            width = int((height / float(img.size[1])) * float(img.size[0]))
+        elif not height:
+            height = int((width / float(img.size[0])) * float(img.size[1]))
+        img = img.resize((width, height), Image.ANTIALIAS)
+
+    # Then copy it under JPEG format
+    img.save(path, format= extension)
+
+
+
+class DataStructure:
+    """
+    Description of a dataset in the file system.
+    The dataset can be patched or not.
+    
+    All the dir attributes are supposed to be subdirectories of the dir_data directory.
+    """
     def __init__(self, dir_data, dir_images, dir_labels= None, dir_annotations= None):
         self.wrapDirs(
             dir_data,
@@ -34,12 +75,22 @@ class DataStructure(object):
         return sorted(paths)
 
     def wrapDirs(self, dir_data, dir_images, dir_labels, dir_annotations, child_dir_data= ""):
+        """
+        Setter of the attributes that wraps all the directories into the dir_data directory.
+        
+        If child_dir_data is defined, it is inserted at the end of the path of dir_data.
+        """
         self.dir_data = os.path.join(dir_data, child_dir_data) if child_dir_data else dir_data
         self.dir_images = os.path.join(dir_data, dir_images)
         self.dir_labels = os.path.join(dir_data, dir_labels) if dir_labels else None
         self.dir_annotations = os.path.join(dir_data, dir_annotations) if dir_annotations else None
     
     def wrapDirsSelf(self, wrapper_dir_data):
+        """
+        Setter of the attributes that wraps all the directories into wrapper_dir_data.
+        
+        If TEMP_ROOT_DIR is defined, it is the wrapper of wrapper_dir_data and it is removed from previous insertions.
+        """
         if TEMP_ROOT_DIR:
             wrapper_dir_data = os.path.join(
                 TEMP_ROOT_DIR,
@@ -70,24 +121,44 @@ class DataStructure(object):
 
 
 def n_colors(n):
-        colors = []
-        rng = np.random.default_rng(0); r = int(rng.random() * 256)
-        rng = np.random.default_rng(1); g = int(rng.random() * 256)
-        rng = np.random.default_rng(2); b = int(rng.random() * 256)
-        step = 256 / n
-        for _ in range(n):
-            r += step
-            g += step
-            b += step
-            r = int(r) % 256
-            g = int(g) % 256
-            b = int(b) % 256
-            colors.append((r, g, b))
-        return colors
+    """
+    Returns a list of n random RGB colors generated with a constant seed.
+    """
+    colors = []
+    rng = np.random.default_rng(0);
+    r = int(rng.random() * 256)
+    g = int(rng.random() * 256)
+    b = int(rng.random() * 256)
+    step = 256 / n
+    for _ in range(n):
+        r += step
+        g += step
+        b += step
+        r = int(r) % 256
+        g = int(g) % 256
+        b = int(b) % 256
+        colors.append((r, g, b))
+    return colors
 
 class constantColorLabels(ColorLabels):
+    """
+    Overloaded class of ColorLabels from dhSegment that always returns the same colours.
+    """
+    
+    @classmethod
+    def from_labels(cls, labels):
+        """
+        Returns an instance of ColorLabels of atomic labels.
+        """
+        num_classes = len(labels)
+        colors = n_colors(num_classes)
+        return cls(colors, labels=labels)
+    
     @classmethod
     def from_labels_multilabel(cls, labels):
+        """
+        Returns an instance of ColorLabels of multi-labels.
+        """
         num_classes = len(labels)
 
         num_tries_left = 10
@@ -109,6 +180,9 @@ class constantColorLabels(ColorLabels):
 
 
 class AnnotationEncoder:
+    """
+    
+    """
     def __init__(self, dir_annotations):
         self.files = DataStructure.collectPaths(dir_annotations, '*.xml')
         self.tag_maps = collectAllTags(self.files, warning= False)
@@ -231,26 +305,25 @@ class MaskBuilder:
         self.shapes_label_file = shapes_label_file
         self.masks = []
 
-    def _buildMask_(self, coords_label, width_image, height_image, name):
-        canvas = Image.fromarray(np.ones((height_image, width_image, 3), dtype='uint8'))
+    def _buildMask_(self, coords_label, original_size, new_size, name):
+        canvas = Image.fromarray(np.ones((original_size[1], original_size[0], 3), dtype='uint8'))
         draw = ImageDraw.Draw(canvas)
         for label, coords in coords_label.items():
             for object in coords:
-                MaskBuilder.drawObject(object, self.codes_labels[label]['color'], draw)
+                self.__class__.drawObject(object, self.codes_labels[label]['color'], draw)
         name += ".png"
         path_mask = os.path.join(self.dir_masks, name)
         self.masks.append(path_mask)
-        canvas.save(path_mask, format='PNG')
+        resizeImgAndSave(canvas, path_mask, 'PNG', new_size[0], new_size[1])
 
     @staticmethod
     def drawObject(points, colour, draw):
         points = [tuple(int(xy) for xy in point.split(',')) for point in points.split(' ')]
         draw.polygon(points, fill= colour)
 
-    def buildAllMasks(self, verbose= True):
+    def buildAllMasks(self, new_size, verbose= True):
         for name, shapes_label in tqdm(self.shapes_label_file.items(), desc= DESC_PROGRESSBAR_IMAGES, disable= not verbose):
-            width, height = shapes_label['size']
-            self._buildMask_(shapes_label['coords'], width, height, name)
+            self._buildMask_(shapes_label['coords'], shapes_label['size'], new_size, name)
         return self.masks
 
 
@@ -279,7 +352,7 @@ class DataPatcher:
             if dir:
                 os.makedirs(dir, exist_ok= True)
 
-    def _copyImages_(self, anomalies= set(), extensions= ['*.jpg', '*.tif', '*.png'], verbose= True):
+    def _copyImages_(self, new_size= (None, None), anomalies= set(), extensions= ['*.jpg', '*.tif', '*.png'], verbose= True):
         """
         Copy images from the original image folder to the new one.
         """
@@ -294,15 +367,25 @@ class DataPatcher:
                     recursive= True
                 )
             )
+        
         for image in images:
-            for anomaly in anomalies:
-                if anomaly in image:
-                    images_to_remove.add(image)
-                    break
+            name_image = os.path.splitext(os.path.basename(image))[0]
+            if name_image in anomalies:
+                images_to_remove.add(image)
         images -= images_to_remove
         
         for path in tqdm(images, desc= DESC_PROGRESSBAR_MASKS, disable= not verbose):
-            shutil.copy(path, self.new_data.dir_images)
+            with Image.open(path) as img:
+                resizeImgAndSave(
+                    img,
+                    os.path.join(
+                        self.new_data.dir_images,
+                        os.path.splitext(os.path.basename(path))[0] + '.jpg'
+                    ),
+                    'JPEG',
+                    new_size[0],
+                    new_size[1]
+                )
         return images
 
     @staticmethod
@@ -332,7 +415,7 @@ class DataPatcher:
         ae = AnnotationEncoder(self.original_data.dir_annotations)
         return ae.chooseLabels()
 
-    def patch(self, names_labels= None, verbose= True, debug= False):
+    def patch(self, size_img= (None, None), names_labels= None, verbose= True, debug_annotations= False):
         # Compute encoding of the labels
         ae = AnnotationEncoder(self.original_data.dir_annotations)
         if names_labels:
@@ -341,10 +424,10 @@ class DataPatcher:
             encoding_labels, names_labels = ae.encodeLabelsInteractive()
 
         # Extract the coordinates of the labels
-        shapes_label_file, anomalies = ae.extractCoordsLabels()
+        shapes_label_file, anomalies = ae.extractCoordsLabels(debug_annotations)
         
         # Debug annotation extractions
-        if debug:
+        if debug_annotations:
             AnnotationEncoder.debugCodesLabels(ae.codes_labels)
             AnnotationEncoder.debugCoordinates(shapes_label_file)
 
@@ -352,15 +435,15 @@ class DataPatcher:
         dir_category = '_' + '_'.join([label for label in names_labels]) + '_'
         self.new_data.wrapDirsSelf(dir_category)
         self._ensureNewDataDirs_()
-
+        
         # Copy images
-        images = self._copyImages_(anomalies, verbose= verbose)
+        images = self._copyImages_(new_size= size_img, anomalies= anomalies, verbose= verbose)
 
         # Build label masks
         mb = MaskBuilder(self.new_data.dir_labels,
                          ae.codes_labels,
                          shapes_label_file)
-        masks = mb.buildAllMasks(verbose= verbose)
+        masks = mb.buildAllMasks(new_size= size_img, verbose= verbose)
 
         assert len(images) == len(masks)
         
