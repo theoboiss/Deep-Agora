@@ -12,8 +12,9 @@ For the moment, it can only patch datasets under the PAGE format.
 
 import os
 from time import sleep
+import csv
 
-from training_data.patch import DataStructure, DataPatcher
+from training_data.patch import DataStructure, AnnotationEncoder, DataPatcher
 
 
 RAW_DATA_DIR = "raw_datasets" # "" if current directory
@@ -70,6 +71,37 @@ def implementDataStructure(name_dataset):
     return data
 
 
+def statisticsOf(original_dataset, names_labels, details= 0):
+    data = implementDataStructure(original_dataset)
+    
+    ae = AnnotationEncoder(data.dir_annotations)
+    stats_files = ae.calculateStatistics(names_labels)
+    
+    n_unique_labels = stats_files.pop("N_UNIQUE_LABELS")
+    n_labels = stats_files.pop("N_LABELS")
+    number_labels = stats_files.pop("LABELS")
+    if details >= 0:
+        if n_labels:
+            print(f"{original_dataset.upper()} dataset contains", end= '')
+            for label, number in number_labels.items():
+                print(f" {number} {label},", end= '')
+            if details >= 1:
+                print()
+                for file, stats in stats_files.items():
+                    filename = os.path.basename(file)
+                    if stats['N_LABELS']:
+                        print(f"\t{filename} ({stats['N_LABELS']}){':' if stats['LABELS'] and details >= 3 else ''}")
+                        if details >= 2:
+                            for label, number in stats['LABELS'].items():
+                                if number:
+                                    print(f"\t\t{number} {label}")
+                    elif details >=3:
+                        print(f"\t0 label in {filename}")
+        else:
+            print(f"{original_dataset.upper()} dataset does not contain" +
+                  f" any {', '.join(names_labels)} label{'s' if len(names_labels)>1 else ''}")
+
+
 def selectAnnotationsFrom(original_dataset):
     """
     Allow the users to extract and select the annotations they want to convert into masks from the dataset.
@@ -102,14 +134,14 @@ def annotationsToMasks(src, dest= "_data_", names_labels= None, verbose= 0):
     """
     print_msg = (verbose >= 1)
     print_progress = (verbose == 2 or verbose >= 4)
-    print_debug = (verbose >= 4)
+    print_debug = (verbose >= 3)
     
     src_data = implementDataStructure(src)
     dest_data = implementDataStructure(dest)
 
     if print_msg:
-        print(f"PATCHING {src.upper()} WITH '{', '.join(names_labels) if names_labels else 'NO'}' SPECIFIED LABEL{'S' if len(names_labels)>1 else ''}")
-        sleep(0.25)
+        print(f"PATCHING {src.upper()} WITH {', '.join(names_labels) if names_labels else 'NO'} SPECIFIED LABEL{'S' if len(names_labels)>1 else ''}")
+        if print_progress: sleep(0.25)
     patcher = DataPatcher(src_data, dest_data)
     patcher.patch(
         size_img= (637, 900),
@@ -117,7 +149,7 @@ def annotationsToMasks(src, dest= "_data_", names_labels= None, verbose= 0):
         verbose= print_progress,
         debug_annotations= print_debug
     )
-    if print_progress & print_debug:
+    if print_progress:
         sleep(0.25)
         print()
     # Keep AnnotationReader/Writer in mind for specific types of datasets
