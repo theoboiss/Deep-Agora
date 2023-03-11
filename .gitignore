@@ -3,9 +3,9 @@
 tensorboard/
 
 # Dataset directories
-_*_/
+data/
 raw_datasets/
-predictions/
+tests/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
