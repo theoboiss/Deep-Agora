@@ -115,13 +115,11 @@ class DataStructure:
     
     
     def __str__(self):
-        return ", ".join((
-            "DataStructure: "+
-            "dir_data= "+self.dir_data,
-            "dir_images= "+self.dir_images,
-            "dir_labels= "+str(self.dir_labels),
-            "dir_annotations= "+str(self.dir_annotations)
-        ))
+        dirs = os.path.normpath(self.dir_data).split(os.sep)
+        if RESULT_DIR and len(dirs) > 1:
+            return os.sep.join(dirs[1:])
+        else:
+            return dirs[-1]
 
 
 
@@ -199,15 +197,7 @@ class DataPatcher:
         return images
 
     
-    def annotationsAnalysis(self):
-        """
-        Allow the user to browse the annotations in the original dataset and choose which ones to use as labels.
-        """
-        ae = AnnotationEncoder(self.original_data.dir_annotations)
-        return ae.chooseLabels()
-
-    
-    def patch(self, size_img= (None, None), names_labels= None, verbose= True, debug_annotations= False):
+    def patch(self, names_labels, size_img, verbose= True, debug_annotations= False):
         """
         Patch the original dataset by resizing and copying its images and by building the masks from its annotations.
         
@@ -218,10 +208,7 @@ class DataPatcher:
         """
         # Compute encoding of the labels
         ae = AnnotationEncoder(self.original_data.dir_annotations)
-        if names_labels:
-            encoding_labels = ae.encodeLabels(names_labels)
-        else:
-            encoding_labels, names_labels = ae.encodeLabelsInteractive()
+        encoding_labels = ae.encodeLabels(names_labels)
 
         # Extract the coordinates of the labels
         shapes_label_file, anomalies = ae.extractCoordsLabels(debug_annotations)
@@ -247,10 +234,6 @@ class DataPatcher:
         masks = mb.buildAllMasks(new_size= size_img, verbose= verbose)
 
         assert len(images) == len(masks)
-        
-        # Write data summary
-        df = pd.DataFrame(data= zip(images, masks))
-        df.to_csv(os.path.join(self.new_data.dir_data, "data.csv"), header=False)
 
         # Write encoding of the labels in the class file
         encoding_labels.colors = encoding_labels.colors[:len(encoding_labels.labels)]
@@ -338,7 +321,7 @@ class AnnotationEncoder:
     def extractCoordsLabels(self, debug= False) -> dict:
         shapes_label_file, anomalies = self._securelyExtractUsing(
             lambda page: {
-                'size': self.__class__._getPageSize_(page),
+                'size': self._getPageSize_(page),
                 'coords': extractAttributesTag(
                     'Coords',
                     'points',
@@ -352,27 +335,40 @@ class AnnotationEncoder:
         return shapes_label_file, anomalies
     
     
-    def chooseLabels(self):
+    def cleanAbsentLabels(self, labels):
+        for label in labels:
+            if label not in self.namespaces_label.keys():
+                labels.remove(label)
+    
+    
+    def chooseLabels(self, preselection= []):
         """
         Return chosen names of labels among the valid tags of the annotations.
         
         WARNING: names of labels must be entered in a hierarchical order.
         """
+        chosen_labels = []
+        valid = False
+        input_msg = "> "
+        if preselection:
+            input_msg += " ".join(preselection)
+        
         print("Enter your labels in a hierarchical order separated by a space ' ':")
         for tag in self.namespaces_label: print(tag)
         print()
 
         # Input targeted labels
-        valid = False
         while not valid:
-            chosen_labels = input("> ").strip(',\'').split(' ')
+            selection = input(input_msg)
+            selection = list(filter(None, selection.strip(',\'').split(' ')))
+            chosen_labels = preselection + selection
+            
             valid = True
             for label in chosen_labels:
                 valid &= (label in self.namespaces_label.keys())
                 if not valid:
                     print("Parsing did not work. Please just copy-paste from the list above.")
                     break
-        print()
         return chosen_labels
 
     
@@ -447,7 +443,7 @@ class MaskBuilder:
         draw = ImageDraw.Draw(canvas)
         for label, coords in coords_label.items():
             for object in coords:
-                self.__class__.drawObject(object, self.codes_labels[label]['color'], draw)
+                self.drawObject(object, self.codes_labels[label]['color'], draw)
         name += ".png"
         path_mask = os.path.join(self.dir_masks, name)
         self.masks.append(path_mask)
