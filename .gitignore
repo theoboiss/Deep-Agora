@@ -2,10 +2,9 @@
 *.pth
 tensorboard/
 
-# Dataset directories
-data/
+# Inputs and outputs
+results/
 raw_datasets/
-tests/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
