@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 from PIL import Image
+from tqdm import tqdm
+
 import os, glob, cv2
 
 from dh_segment_torch.config import Params
@@ -9,27 +11,21 @@ from dh_segment_torch.training import Trainer as dhTrainer
 from dh_segment_torch.inference import PredictProcess
 
 
+_DESC_PROGRESSBAR_LOADING =   "Loading predictions       "
+_DESC_PROGRESSBAR_REGIONS =   "Drawing regions on images "
+_DESC_PROGRESSBAR_VIGNETTES = "Extracting vignettes      "
+
+
+
 class ModelUser:
     def __init__(self, labels):
-        self.results_dir = labels
-        self.data_dir = os.path.join(results_dir, 'data')
-        self.model_dir = os.path.join(results_dir, "model")
+        self.results_dir = os.path.join("results", '_'.join(labels))
+        self.data_dir = os.path.join(self.results_dir, 'data')
+        self.model_dir = os.path.join(self.results_dir, "model")
 
         if not os.path.exists(self.data_dir):
             raise Exception(f"No dataset at {self.data_dir}. Please use data_preparation module before training.")
         os.makedirs(self.results_dir, exist_ok= True)
-    
-    
-    @property
-    def results_dir(self):
-        return self.results_dir
-    
-    
-    @results_dir.setter
-    def results_dir(self, labels):
-        #labels = labels.sort() # in the case of multilabels
-        labels_str = '_'.join(labels)
-        self.results_dir = os.path.join("results", labels_str)
 
         
         
@@ -86,7 +82,7 @@ class Trainer(ModelUser):
         return params
        
     
-    def _setupTraining(self, batch_size= 4, epochs= 100, learning_rate: 1e-4, gamma_exp_lr= 0.9995, evaluate_every_epoch= 5, val_patience= 4, output_size= 1e6, repeat_dataset= 4):
+    def _setupTraining(self, batch_size= 4, epochs= 100, learning_rate= 1e-4, gamma_exp_lr= 0.9995, evaluate_every_epoch= 5, val_patience= 4, output_size= 1e6, repeat_dataset= 4):
         params = {
             "color_labels": {"label_json_file": os.path.join(self.data_dir, "classfile.json")}, # Color labels produced before
             "train_dataset": {
@@ -133,12 +129,36 @@ class Trainer(ModelUser):
         trainer.train()
 
         
+
+def _n_colors(n):
+    """
+    Returns a list of n random RGB colors generated with a constant seed.
+    """
+    colors = []
+    rng = np.random.default_rng(0);
+    r = int(rng.random() * 256)
+    g = int(rng.random() * 256)
+    b = int(rng.random() * 256)
+    step = 256 / n
+    for _ in range(n):
+        r += step
+        g += step
+        b += step
+        r = int(r) % 256
+        g = int(g) % 256
+        b = int(b) % 256
+        colors.append((r, g, b))
+    return colors
+        
         
 class Predictor(ModelUser):
-    def __init__(self, labels):
+    def __init__(self, labels, input_dir= None):
         super().__init__(labels)
+        if input_dir:
+            self.data_dir = input_dir
         self.output_dir = os.path.join(self.results_dir, 'predictions')
-        self.num_classes = 0
+        self.num_classes = len(labels)+1
+        self.colors = _n_colors(self.num_classes)
         self.results = None
         
         
@@ -154,7 +174,7 @@ class Predictor(ModelUser):
                     "encoder": "resnet50",
                     "decoder": {"decoder_channels": [512, 256, 128, 64, 32], "max_channels": 512}
                 },
-                "num_classes": 2,
+                "num_classes": self.num_classes,
                 "model_state_dict": sorted(glob.glob(os.path.join(self.model_dir, 'best_model_checkpoint_miou=*.pth')))[-1],
                 "device": "cuda:0"
         }
@@ -168,45 +188,6 @@ class Predictor(ModelUser):
         return process_params
     
     
-    def inference(self):
-        dhPredictor = PredictProcess.from_params(
-            Params(
-                self._setupInference()
-            )
-        )
-        self.results = dhPredictor.process()
-        self._convertPredictions() 
-        
-        
-    def _convertPredictions(self):
-        for result in self.results:
-            # Set number of classes
-            num_classes_result = result['probas'].shape[0]
-            if num_classes_result > self.num_classes:
-                self.num_classes = num_classes_result
-                
-            # Convert probas to semantic segmentation
-            result['semantic_segment'] = postprocess(result.pop(probas))
-            
-            # Load image
-            result['image'] = cv2.cvtColor(
-                cv2.imread(result['path']),
-                cv2.COLOR_BGR2RGB
-            )
-            
-            # Parse name
-            result['name'] = os.path.splitext(os.path.basename(result.pop('path')))[0]
-    
-    
-    @staticmethod
-    def postprocess(preds):
-        best_preds = np.argmax(preds, axis=0).astype('uint8')
-        canvas = np.zeros((best_preds.shape[0], best_preds.shape[1], 3)).astype('uint8')
-        for i, color in enumerate(colors):
-            canvas[best_preds == i] = color
-        return canvas
-    
-    
     @staticmethod
     def _findContours(preds):
         # Threshold the image to create a binary image
@@ -214,16 +195,17 @@ class Predictor(ModelUser):
         _, thresh_preds = cv2.threshold(grey_preds, 1, 255, cv2.THRESH_BINARY)
 
         # Loop over the contours and draw bounding boxes around them
-        contours, _ = cv2._findContours(thresh_preds, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(thresh_preds, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         return contours
-
-
-    def drawRegions(preds, image= None, bounding_box= False):
+    
+    
+    @classmethod
+    def _drawRegions(cls, preds, image= None, bounding_box= False):
         if image is None:
             canvas = np.zeros((preds.shape[0], preds.shape[1], 3)).astype('uint8')
         else:
             canvas = image.copy()
-        contours = _findContours(preds)
+        contours = cls._findContours(preds)
         if bounding_box:
             for contour in contours:
                 x,y,w,h = cv2.boundingRect(contour)
@@ -232,8 +214,10 @@ class Predictor(ModelUser):
             cv2.drawContours(canvas, contours, -1, 255, 0)
         return canvas
     
-    def cutVignettes(preds, image, bounding_box= False):
-        contours = findContours(preds)
+    
+    @classmethod
+    def _cutVignettes(cls, preds, image, bounding_box= False):
+        contours = cls._findContours(preds)
         pred_cuts = []
         if bounding_box:
             for contour in contours:
@@ -260,3 +244,88 @@ class Predictor(ModelUser):
 
                 pred_cuts.append(contour_img)
         return pred_cuts
+        
+        
+    def __postprocess(self):
+        for result in self.results:
+            # Convert probas to semantic segmentation
+            result['probas'] = self._selectBestPreds(result['probas'])
+            
+            # Load image
+            result['image'] = cv2.cvtColor(
+                cv2.imread(result['path']),
+                cv2.COLOR_BGR2RGB
+            )
+            
+            # Parse name
+            result['name'] = os.path.splitext(os.path.basename(result.pop('path')))[0]
+    
+    
+    def _selectBestPreds(self, preds):
+        best_preds = np.argmax(preds, axis=0).astype('uint8')
+        canvas = np.zeros((best_preds.shape[0], best_preds.shape[1], 3)).astype('uint8')
+        for i, color in enumerate(self.colors):
+            canvas[best_preds == i] = color
+        return canvas
+            
+            
+    def _loadPredictions(self, verbose= True):
+        results = [
+            {'probas': np.load(probas_path), 'path': image_path}
+            for probas_path, image_path in tqdm(zip(
+                sorted(
+                    glob.glob(os.path.join(self.output_dir, '*.npy'))
+                ),
+                sorted(
+                    glob.glob(os.path.join(self.data_dir, 'images', '*.*'))
+                )
+            ), desc= _DESC_PROGRESSBAR_LOADING, disable= not verbose)
+        ]
+        return results
+        
+        
+    def _postprocess(self, save_probas= False, drawRegions= True, cutVignettes= True, verbose= True):
+        self.__postprocess()
+        if drawRegions:
+            self.drawRegions(verbose= verbose)
+        if cutVignettes:
+            self.cutVignettes(verbose= verbose)
+    
+    
+    def drawRegions(self, bounding_box= False, verbose= True):
+        for result in tqdm(self.results, desc= _DESC_PROGRESSBAR_REGIONS, disable= not verbose):
+            result['regions'] = self.__class__._drawRegions(
+                result['probas'],
+                result['image'],
+                bounding_box
+            )
+    
+    
+    def cutVignettes(self, bounding_box= False, verbose= True):
+        for result in tqdm(self.results, desc= _DESC_PROGRESSBAR_VIGNETTES, disable= not verbose):
+            result['vignettes'] = self.__class__._cutVignettes(
+                result['probas'],
+                result['image'],
+                bounding_box
+            )
+    
+    
+    def start(self, save_probas= False, drawRegions= True, cutVignettes= True, verbose= True):
+        dhPredictor = PredictProcess.from_params(
+            Params(
+                self._setupInference()
+            )
+        )
+        if save_probas:
+            dhPredictor.process_to_probas_files(self.output_dir)
+            self.results = self._loadPredictions(verbose)
+        else:
+            self.results = dhPredictor.process()
+        self._postprocess(drawRegions, cutVignettes, verbose)
+        return self.results
+        
+        
+    def load(self, drawRegions= True, cutVignettes= True, verbose= True):
+        self.results = self._loadPredictions(verbose)
+        self._postprocess(drawRegions, cutVignettes, verbose)
+        return self.results

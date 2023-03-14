@@ -1,7 +1,3 @@
-# Models
-*.pth
-tensorboard/
-
 # Inputs and outputs
 results/
 raw_datasets/

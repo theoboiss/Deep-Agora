@@ -380,8 +380,8 @@ class AnnotationEncoder:
         """
         if add_background and 'Background' not in names_labels:
             names_labels = ['Background'] + names_labels
-        #encoding_labels = constantColorLabels.from_labels_multilabel(names_labels)
-        encoding_labels = constantColorLabels.from_labels(names_labels)
+        #encoding_labels = _constantColorLabels.from_labels_multilabel(names_labels)
+        encoding_labels = _constantColorLabels.from_labels(names_labels)
         codes_labels = dict()
         for index, label in enumerate(encoding_labels.labels): # TODO Add multilabels
             codes_labels[label] = {'color': encoding_labels.colors[index]}
@@ -463,7 +463,7 @@ class MaskBuilder:
 
 
 
-def n_colors(n):
+def _n_colors(n):
     """
     Returns a list of n random RGB colors generated with a constant seed.
     """
@@ -484,7 +484,7 @@ def n_colors(n):
     return colors
 
 
-class constantColorLabels(ColorLabels):
+class _constantColorLabels(ColorLabels):
     """
     Overloaded class of ColorLabels from dhSegment that always returns the same colours.
     """
@@ -494,7 +494,7 @@ class constantColorLabels(ColorLabels):
         Returns an instance of ColorLabels of atomic labels.
         """
         num_classes = len(labels)
-        colors = n_colors(num_classes)
+        colors = _n_colors(num_classes)
         for index, label in enumerate(labels):
             if label == 'Background':
                 colors[index] = (0, 0, 0)
@@ -512,7 +512,7 @@ class constantColorLabels(ColorLabels):
         num_tries_left = 10
         while num_tries_left:
             num_tries_left -= 1
-            base_colors = n_colors(num_classes)
+            base_colors = _n_colors(num_classes)
             for index, label in enumerate(labels):
                 if label == 'Background':
                     colors[index] = (0, 0, 0)
@@ -526,5 +526,5 @@ class constantColorLabels(ColorLabels):
                 "Falling back on one color per one hot encoding."
             )
             one_hot_encoding = get_all_one_hots(num_classes).tolist()
-            colors = n_colors(len(one_hot_encoding))
+            colors = _n_colors(len(one_hot_encoding))
         return cls(colors, one_hot_encoding, labels)

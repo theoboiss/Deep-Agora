@@ -205,7 +205,7 @@ class Orchestrator:
         for data_structure, set_labels in self.data_specs:
             if set_labels:
                 if print_msg:
-                    print(f"PATCHING {str(data_structure).upper()} WITH {', '.join(set_labels) if set_labels else 'NO'} SPECIFIED LABEL{'S' if len(set_labels)>1 else ''}")
+                    print(f"PATCHING {str(data_structure).upper()} WITH {', '.join(set_labels).upper() if set_labels else 'NO'} SPECIFIED LABEL{'S' if len(set_labels)>1 else ''}")
                     if print_progress: sleep(0.25)
                 patcher = DataPatcher(data_structure, self.output)
                 patcher.patch(
