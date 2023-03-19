@@ -341,58 +341,17 @@ class Predictor(ModelUser):
             'add_path': True
         }
         return process_params
-            
-            
-    def load(self, verbose= True):
-        self.results = []
-        file_dict = {}
-        
-        probas_paths = glob.glob(os.path.join(self.output_dir, '*.npy'))
-        image_paths = glob.glob(os.path.join(self.data_dir, '*.*'))
-
-        # Match pairs between probas and images
-        for path in probas_paths + image_paths:
-            name = os.path.splitext(os.path.basename(path))[0]
-            if name not in file_dict:
-                file_dict[name] = {'probas_path': None, 'image_path': None}
-            if path in probas_paths:
-                file_dict[name]['probas_path'] = path
-            else:
-                file_dict[name]['image_path'] = path
-
-        for name, files in file_dict.items():
-            if files['probas_path'] and files['image_path']:
-                self.results.append({
-                    'probas_path': files['probas_path'],
-                    'image_path': files['image_path'],
-                    'name': name
-                })
-            elif files['image_path']:
-                msg = f"{name} is missing a probability file! Apply the start method to segment it"
-                print(msg)
-                _LOGGER.error(msg)
-            elif files['probas_path']:
-                _LOGGER.info(f"{name} is missing an image file")
     
     
-    def start(self, batch_size= 4, save_probas= True):
+    def start(self, batch_size= 4, drawRegions= True, cutVignettes= True, bounding_box= False, verbose= True):
         dhPredictor = PredictProcess.from_params(
             Params(
                 self._setupInference(batch_size)
             )
         )
         _LOGGER.info("Start inference")
-        if save_probas: # Save predictions
-            for file in glob.glob(os.path.join(self.output_dir, '*.npy')):
-                os.remove(file)
-            dhPredictor.process_to_probas_files(self.output_dir)
-            _LOGGER.info(f"Predictions saved in {self.output_dir}")
-            self.load()
-        else: # Do not save predictions
-            self.results = dhPredictor.process()
+        self.results = dhPredictor.process()
         
-        
-    def postProcess(self, drawRegions= True, cutVignettes= True, bounding_box= False, verbose= True):
         _LOGGER.info("Post-process predictions")
         for result in tqdm(self.results, desc= _DESC_PROGRESSBAR_POSTPROCESS, disable= not verbose):
             self._render(result)
