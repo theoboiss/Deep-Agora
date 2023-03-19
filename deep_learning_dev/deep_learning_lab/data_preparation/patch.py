@@ -42,7 +42,7 @@ def _resizeImgAndSave(img: Image, path, extension, width= None, height= None):
     """
     # Resize the image
     if width or height:
-        _LOGGER.warning("Training requires all images to be the same size")
+        _LOGGER.debug("Training requires all images to be the same size so resizing")
         if height and not width:
             width = int((height / float(img.size[1])) * float(img.size[0]))
         elif not height:
@@ -235,7 +235,7 @@ class DataPatcher:
         # Debug annotation extractions
         if debug_annotations:
             AnnotationEncoder.debugCoordinates(shapes_label_name)
-        _LOGGER.debug(f"Color codes: {list(ae.codes_labels.items())}")
+        _LOGGER.info(f"Color codes: {list(ae.codes_labels.items())}")
             
         # Group data by selected label
         #names_labels = names_labels.sort() # if the case of multilabels
@@ -261,7 +261,7 @@ class DataPatcher:
         
         # Copy images
         images = self._copyImages(new_size= size_img, exceptions= anomalies, verbose= verbose)
-
+        
         # Build label masks
         mb = MaskBuilder(self.new_data.dir_labels,
                          ae.codes_labels,
@@ -375,7 +375,7 @@ class AnnotationEncoder:
             if label not in self.namespaces_label.keys():
                 labels.remove(label)
         if len(labels_before) > len(labels):
-            _LOGGER.info(f"Removed {labels_before - set(labels)}")
+            _LOGGER.info(f"No label found for {labels_before - set(labels)}")
     
     
     def chooseLabels(self, preselection= []):

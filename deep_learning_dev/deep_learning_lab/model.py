@@ -156,8 +156,9 @@ class Trainer(ModelUser):
     def train(self, batch_size= 1, epochs= 1, learning_rate= 1e-1, gamma_exp_lr= 1.0, evaluate_every_epoch= 1, val_patience= 1, repeat_dataset= 1, output_size= 1e6):
         params = self._setupTraining(batch_size, epochs, learning_rate, gamma_exp_lr, evaluate_every_epoch, val_patience, output_size, repeat_dataset)
         trainer = dhTrainer.from_params(params)
+        _LOGGER.info(f"Starting training of model in {model_dir}")
         trainer.train()
-        _LOGGER.info(f"Model trained and serialized in {model_dir}")
+        _LOGGER.info(f"Model trained and serialized")
         
         
         
@@ -290,6 +291,13 @@ class Predictor(ModelUser):
             new_height = int(image.shape[0] // scale_factor)
             image = cv2.resize(image, (new_width, new_height))
         result['image'] = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        
+        
+    def _saveResults(self):
+        for id_page, result in enumerate(self.results):
+            for id_label, vignette in enumerate(result['vignettes']):
+                file_path = os.path.join(self.output_dir, f"{id_page}.{id_label}.png")
+                cv2.imwrite(file_path, vignette)
     
     
     def _dataCSVToFolder(self, csv_path, empty_folder= True):
@@ -349,7 +357,7 @@ class Predictor(ModelUser):
                 self._setupInference(batch_size)
             )
         )
-        _LOGGER.info("Start inference")
+        _LOGGER.info(f"Starting inference of model from {self.model_dir}")
         self.results = dhPredictor.process()
         
         _LOGGER.info("Post-process predictions")
@@ -359,4 +367,6 @@ class Predictor(ModelUser):
                 self.__class__._drawRegions(result, bounding_box, verbose)
             if cutVignettes:
                 self.__class__._cutVignettes(result, bounding_box, verbose)
+        self._saveResults()
+        _LOGGER.info(f"Results can be found in {self.output_dir}")
         return self.results
