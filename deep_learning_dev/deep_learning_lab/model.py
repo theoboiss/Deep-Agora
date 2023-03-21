@@ -1,3 +1,20 @@
+"""
+Module for semantic segmentation model training and inference.
+
+This module contains classes for training and predicting with semantic segmentation models.
+The `Trainer` class allows users to setup, fine-tune, and train a semantic segmentation model using the `dhSegment` library.
+The `Predictor` class provides functionality for performing inference on a trained model.
+
+Classes:
+- ModelUser: Abstract class designed to share model and data architectures between Trainer and Predictor.
+- Trainer: A class implementing the dhSegment Trainer interface designed to setup, fine-tune, and train a semantic segmentation model.
+- Predictor: A class to perform inference on a semantic segmentation model using PredictProcess of dhSegment.
+
+Usage:
+Import the required class from the module and create an object with the necessary parameters to use the functions provided by the class.
+
+For more information about each class and its parameters, please refer to the class docStrings.
+"""
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -16,10 +33,8 @@ from deep_learning_lab import logging
 _LOGGER = logging.getLogger(__name__)
 
 _DESC_PROGRESSBAR_POSTPROCESS = "Post-processing predictions "
-_DESC_PROGRESSBAR_REGIONS =     "Drawing regions on images   "
-_DESC_PROGRESSBAR_VIGNETTES =   "Extracting vignettes        "
 
-        
+
 
 class ModelUser(ABC):
     """

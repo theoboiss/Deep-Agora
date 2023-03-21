@@ -1,3 +1,14 @@
+"""
+This module provides a function to select a CUDA device and set environment variables.
+
+Functions:
+    cudaDeviceSelection(preselected_device: int = -1, device_order: str = "PCI_BUS_ID") -> None:
+        Selects a CUDA device and sets environment variables. 
+        Raises an exception if no CUDA device is detected.
+        
+    cudaInfo() -> str:
+        Returns a string with information about the CUDA device(s).
+"""
 import torch, os
 
 from deep_learning_lab import logging
