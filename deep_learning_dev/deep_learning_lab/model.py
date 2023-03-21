@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 from tqdm import tqdm
+from abc import ABC
 import os, glob, cv2, shutil
 
 from dh_segment_torch.config import Params
@@ -20,37 +21,16 @@ _DESC_PROGRESSBAR_VIGNETTES =   "Extracting vignettes        "
 
         
 
-def _n_colors(n):
+class ModelUser(ABC):
     """
-    Returns a list of n random RGB colors generated with a constant seed.
+    Abstract class designed to share model and data locations.
     """
-    assert n
-    colors = [(0, 0, 0)]
-    rng = np.random.default_rng(0);
-    r = int(rng.random() * 256)
-    g = int(rng.random() * 256)
-    b = int(rng.random() * 256)
-    step = 256 / n
-    for _ in range(n-1):
-        r += step
-        g += step
-        b += step
-        r = int(r) % 256
-        g = int(g) % 256
-        b = int(b) % 256
-        colors.append((r, g, b))
-    return colors
-
-
-
-class ModelUser:
     def __init__(self, labels, input_dir, workdir= "results"):
-        if workdir:
-            self.workdir = os.path.join(workdir, '_'.join(labels))
-            os.makedirs(self.workdir, exist_ok= True)
-        self.model_dir = os.path.join(self.workdir, "model")
+        self.workdir = os.path.join(workdir, '_'.join(labels))
+        os.makedirs(self.workdir, exist_ok= True)
         self.data_dir = os.path.join(self.workdir, input_dir)
         os.makedirs(self.data_dir, exist_ok= True)
+        self.model_dir = os.path.join(self.workdir, "model")
         
         
     def __str__(self):
@@ -59,17 +39,30 @@ class ModelUser:
         
         
 class Trainer(ModelUser):
-    def __init__(self, labels, input_dir= "training_data", workdir= "results"):
+    """
+    Implementation of the dhSegment Trainer interface designed to setup, fine-tune and train a semantic segmentation model.
+    
+    labels: iterable set of label names used to choose the appropriate ressources in workdir
+    workdir: directory name of the ressources and outputs
+    input_dir: directory name of patched dataset in workdir
+    train_ratio: the ratio of data to use for training (between 0.0 and 1.0)
+    val_ratio: the ratio of data to use for validation (between 0.0 and 1.0-train_ratio)
+    """
+    
+    def __init__(self, labels, workdir= "results", input_dir= "training_data", train_ratio= 0.80, val_ratio= 0.10):
+        """
+        
+        """
         super().__init__(labels, input_dir, workdir)
         
         self.tensorboard_dir = os.path.join(self.workdir, 'tensorboard', 'log')
-        self._setupEnvironment()
+        self._setupEnvironment(train_ratio, val_ratio)
 
         
-    def _setupEnvironment(self):
+    def _setupEnvironment(self, train_ratio, val_ratio):
         params = {
             'data_path' : self.data_dir, # Path to write the data
-            'data_splitter': {'train_ratio': 0.80, 'val_ratio': 0.10, 'test_ratio': 0.10}, # splitting ratio of the data
+            'data_splitter': {'train_ratio': train_ratio, 'val_ratio': val_ratio, 'test_ratio': 1.00-train_ratio-val_ratio}, # splitting ratio of the data
         }
         
         
@@ -156,12 +149,35 @@ class Trainer(ModelUser):
     def train(self, batch_size= 1, epochs= 1, learning_rate= 1e-1, gamma_exp_lr= 1.0, evaluate_every_epoch= 1, val_patience= 1, repeat_dataset= 1, output_size= 1e6):
         params = self._setupTraining(batch_size, epochs, learning_rate, gamma_exp_lr, evaluate_every_epoch, val_patience, output_size, repeat_dataset)
         trainer = dhTrainer.from_params(params)
-        _LOGGER.info(f"Starting training of model in {model_dir}")
+        _LOGGER.info(f"Starting training of model in {self.model_dir}")
         trainer.train()
         _LOGGER.info(f"Model trained and serialized")
         
         
         
+def _n_colors(n):
+    """
+    Returns a list of n random RGB colors generated with a constant seed.
+    """
+    assert n
+    colors = [(0, 0, 0)]
+    rng = np.random.default_rng(0);
+    r = int(rng.random() * 256)
+    g = int(rng.random() * 256)
+    b = int(rng.random() * 256)
+    step = 256 / n
+    for _ in range(n-1):
+        r += step
+        g += step
+        b += step
+        r = int(r) % 256
+        g = int(g) % 256
+        b = int(b) % 256
+        colors.append((r, g, b))
+    return colors
+
+
+
 class Predictor(ModelUser):
     def __init__(self, labels, input_dir= 'inference_data', output_dir= None, output_size= None, from_csv= None, reset_input= True):
         super().__init__(labels, input_dir)
