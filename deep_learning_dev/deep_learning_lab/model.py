@@ -1,20 +1,21 @@
-"""
-Module for semantic segmentation model training and inference.
+"""Module for semantic segmentation model training and inference.
 
 This module contains classes for training and predicting with semantic segmentation models.
 The `Trainer` class allows users to setup, fine-tune, and train a semantic segmentation model using the `dhSegment` library.
 The `Predictor` class provides functionality for performing inference on a trained model.
 
 Classes:
-- ModelUser: Abstract class designed to share model and data architectures between Trainer and Predictor.
-- Trainer: A class implementing the dhSegment Trainer interface designed to setup, fine-tune, and train a semantic segmentation model.
-- Predictor: A class to perform inference on a semantic segmentation model using PredictProcess of dhSegment.
+    ModelUser: Abstract class designed to share model and data architectures between Trainer and Predictor.
+    Trainer: A class implementing the dhSegment Trainer interface designed to setup, fine-tune, and train a semantic segmentation model.
+    Predictor: A class to perform inference on a semantic segmentation model using PredictProcess of dhSegment.
 
 Usage:
-Import the required class from the module and create an object with the necessary parameters to use the functions provided by the class.
+    Import the required class from the module and create an object with the necessary parameters to use the functions provided by the class.
 
 For more information about each class and its parameters, please refer to the class docStrings.
+
 """
+
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -37,22 +38,23 @@ _DESC_PROGRESSBAR_POSTPROCESS = "Post-processing predictions "
 
 
 class ModelUser(ABC):
-    """
-    Abstract class designed to share model and data locations.
+    """Abstract class designed to share model and data locations.
 
     Args:
-    labels (iterable): List of labels used in the model.
-    input_dir (str): Name of the input directory.
-    workdir (str, optional): Name of the working directory. Defaults to "results".
+        labels (iterable): Iterable of labels used in the model.
+        input_dir (str): Name of the input directory.
+        workdir (str, optional): Name of the working directory. Defaults to "results".
+
     """
 
     def __init__(self, labels, input_dir: str, workdir: str = "results"):
         """Initializes the ModelUser object.
 
         Args:
-        labels (list): List of labels used in the model.
-        input_dir (str): Name of the input directory.
-        workdir (str, optional): Name of the working directory. Defaults to "results".
+            labels (iterable): Iterable of labels used in the model.
+            input_dir (str): Name of the input directory.
+            workdir (str, optional): Name of the working directory. Defaults to "results".
+
         """
         self.workdir = os.path.join(workdir, '_'.join(labels))
         os.makedirs(self.workdir, exist_ok= True)
@@ -68,8 +70,7 @@ class ModelUser(ABC):
         
         
 class Trainer(ModelUser):
-    """
-    A class implementing the dhSegment Trainer interface designed to setup, fine-tune, and train a semantic segmentation model.
+    """A class implementing the dhSegment Trainer interface designed to setup, fine-tune, and train a semantic segmentation model.
 
     Args:
         labels (iterable): A set of label names used to choose the appropriate resources in the workdir.
@@ -77,6 +78,7 @@ class Trainer(ModelUser):
         input_dir (str): The directory name of the patched dataset in the workdir. Default is "training_data".
         train_ratio (float): The ratio of data to use for training (between 0.0 and 1.0). Default is 0.80.
         val_ratio (float): The ratio of data to use for validation (between 0.0 and 1.0-train_ratio). Default is 0.10.
+
     """
     
     def __init__(self, labels, workdir: str = "results", input_dir: str = "training_data", train_ratio: float = 0.80, val_ratio: float = 0.10):
@@ -88,6 +90,7 @@ class Trainer(ModelUser):
             input_dir (str): The directory name of the patched dataset in the workdir. Default is "training_data".
             train_ratio (float): The ratio of data to use for training (between 0.0 and 1.0). Default is 0.80.
             val_ratio (float): The ratio of data to use for validation (between 0.0 and 1.0-train_ratio). Default is 0.10.
+
         """
         super().__init__(labels, input_dir, workdir)
         
@@ -104,7 +107,9 @@ class Trainer(ModelUser):
 
         Returns:
             params (dict): A dictionary containing the parameters used to set up the environment.
+
         """
+
         # Set up the data path and splitting ratio
         params = {
             'data_path' : self.data_dir, # Path to write the data
@@ -249,8 +254,7 @@ class Trainer(ModelUser):
         
         
 def _n_colors(n: int) -> list:
-    """
-    Returns a list of n random RGB colors generated with a constant seed.
+    """Returns a list of n random RGB colors generated with a constant seed.
 
     Args:
         n (int): The number of colors to generate.
@@ -260,6 +264,7 @@ def _n_colors(n: int) -> list:
 
     Raises:
         AssertionError: If n is falsy (e.g., zero).
+    
     """
     assert n, "n must be a positive integer"
     
@@ -294,16 +299,16 @@ def _n_colors(n: int) -> list:
 
 
 class Predictor(ModelUser):
-    """
-    A class to perform inference on a semantic segmentation model using PredictProcess of dhSegment.
+    """A class to perform inference on a semantic segmentation model using PredictProcess of dhSegment.
 
     Args:
-        labels (iterable): A list of label names.
+        labels (iterable): An iterable of label names.
         input_dir (str): The path to the input data directory. Defaults to 'inference_data'.
         output_dir (str): The path to the output directory. If not provided, the directory 'predictions' will be created within the workdir. Defaults to None.
         output_size (tuple): The output size of the segmentation model. Defaults to None.
         from_csv (str): The name of the CSV file containing the input data. Defaults to None.
         reset_input (bool): Whether or not to delete the contents of the input directory before copying new input data. Defaults to True.
+    
     """
     
     def __init__(self, labels, input_dir: str = 'inference_data', output_dir: str = None, output_size: tuple = None,
@@ -311,12 +316,13 @@ class Predictor(ModelUser):
         """Initialize the Predictor class instance.
 
         Args:
-            labels (iterable): A list of label names.
+            labels (iterable): An iterable of label names.
             input_dir (str): The path to the input data directory. Defaults to 'inference_data'.
             output_dir (str): The path to the output directory. If not provided, the directory 'predictions' will be created within the workdir. Defaults to None.
             output_size (tuple): The output size of the segmentation model. Defaults to None.
             from_csv (str): The name of the CSV file containing the input data. Defaults to None.
             reset_input (bool): Whether or not to delete the contents of the input directory before copying new input data. Defaults to True.
+        
         """
         super().__init__(labels, input_dir)
         
@@ -419,16 +425,16 @@ class Predictor(ModelUser):
     
     @classmethod
     def __cutVignettes(cls, labels: np.ndarray, image: np.ndarray, bounding_box: bool = False) -> list:
-        """
-        Cut out vignettes from an image.
+        """Cut out vignettes from an image.
         
         Args:
-        - labels (ndarray): Image containing the objects.
-        - image (ndarray): Image to cut out the regions.
-        - bounding_box (bool, optional): Whether to draw bounding boxes instead of contours. Defaults to False.
+            labels (ndarray): Image containing the objects.
+            image (ndarray): Image to cut out the regions.
+            bounding_box (bool, optional): Whether to draw bounding boxes instead of contours. Defaults to False.
         
         Returns:
-        - pred_cuts: a list of numpy arrays, each containing a vignette.
+            pred_cuts: a list of numpy arrays, each containing a vignette.
+        
         """
         contours = cls._findContours(labels)
         pred_cuts = []
@@ -460,13 +466,13 @@ class Predictor(ModelUser):
     
     @classmethod
     def _drawRegions(cls, result: dict, bounding_box: bool = False, verbose: bool = True) -> None:
-        """
-        Draw the regions in the image.
+        """Draw the regions in the image.
         
         Args:
-        - result (dict): A dictionary containing the image and labels.
-        - bounding_box (bool): Whether to use bounding box or contours. Default is False.
-        - verbose (bool): Whether to print verbose output. Default is True.
+            result (dict): A dictionary containing the image and labels.
+            bounding_box (bool): Whether to use bounding box or contours. Default is False.
+            verbose (bool): Whether to print verbose output. Default is True.
+        
         """
         result['regions'] = cls.__drawRegions(
             result['labels'],
@@ -477,13 +483,13 @@ class Predictor(ModelUser):
     
     @classmethod
     def _cutVignettes(cls, result: dict, bounding_box: bool = False, verbose: bool = True) -> None:
-        """
-        Cut out the vignettes from an image and add them to the result dictionary.
+        """Cut out the vignettes from an image and add them to the result dictionary.
         
         Args:
-        - result (dict): A dictionary containing the image and labels.
-        - bounding_box (bool): Whether to use bounding box or contours. Default is False.
-        - verbose (bool): Whether to print verbose output. Default is True.
+            result (dict): A dictionary containing the image and labels.
+            bounding_box (bool): Whether to use bounding box or contours. Default is False.
+            verbose (bool): Whether to print verbose output. Default is True.
+
         """
         result['vignettes'] = cls.__cutVignettes(
             result['labels'],
@@ -493,14 +499,14 @@ class Predictor(ModelUser):
     
     
     def _selectLabels(self, preds: np.ndarray) -> np.ndarray:
-        """
-        Select the labels with the highest probability for each pixel.
+        """Select the labels with the highest probability for each pixel.
         
         Args:
-        - preds (ndarray): numpy array of predicted probabilities for each class.
+            preds (ndarray): numpy array of predicted probabilities for each class.
         
         Returns:
-        - mask_labels (ndarray): numpy array of the selected labels, one-hot encoded.
+            mask_labels (ndarray): numpy array of the selected labels, one-hot encoded.
+        
         """
         best_preds = np.argmax(preds, axis=0).astype('uint8')
         mask_labels = np.zeros((best_preds.shape[0], best_preds.shape[1], 3)).astype('uint8')
@@ -510,11 +516,11 @@ class Predictor(ModelUser):
         
         
     def _render(self, result: dict) -> None:
-        """
-        Render the predicted labels onto the image.
+        """Render the predicted labels onto the image.
         
         Args:
-        - result (dict): dictionary containing the image and predicted probabilities.
+            result (dict): dictionary containing the image and predicted probabilities.
+        
         """
         # Parse name
         result['name'] = os.path.splitext(os.path.basename(result['image_path']))[0]
@@ -550,6 +556,7 @@ class Predictor(ModelUser):
         Args:
             csv_path (str): The path to the CSV file containing the test data.
             empty_folder (bool): Whether to remove existing data in the data directory.
+        
         """
         if empty_folder: # Remove existing data
             for file in glob.glob(os.path.join(self.data_dir, '*.*')):
@@ -572,6 +579,7 @@ class Predictor(ModelUser):
         
         Returns:
             dict: The inference parameters.
+        
         """
         if output_size:
             transforms = [{"type": "fixed_size_resize", "output_size": output_size}]
@@ -611,7 +619,7 @@ class Predictor(ModelUser):
     
     
     def start(self, batch_size= 4, drawRegions= True, cutVignettes= True, bounding_box= False, verbose= True) -> list:
-        """Starts the inference process and saves the results in the output directory.
+        """Starts the inference process and saves the vignettes in the output directory.
         
         Args:
             batch_size (int): The batch size for inference.
@@ -621,7 +629,8 @@ class Predictor(ModelUser):
             verbose (bool): Whether to print progress messages during the inference process.
         
         Returns:
-            list: The inference results.
+            list: The inference results. They contain images with drawn regions, vignettes, probability maps, paths and names.
+        
         """
         dhPredictor = PredictProcess.from_params(
             Params(

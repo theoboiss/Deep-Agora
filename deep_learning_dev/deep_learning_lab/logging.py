@@ -1,13 +1,12 @@
-"""
-This module provides a method for creating a logger object that can be used for logging purposes.
+"""This module provides a method for creating a logger object that can be used for logging purposes.
 
 Functions:
-- getLogger(name: str) -> logging.Logger:
-  Returns a logger object that writes to a daily rotating file under the name of the package.
+    getLogger(name: str) -> logging.Logger:
+    Returns a logger object that writes to a daily rotating file under the name of the package.
 
 Global Variables:
-- LOGGER_LEVEL (str): The level of logging to use. Default is 'DEBUG'.
-- LOGGER_DIR (str): The directory where log files will be stored. Default is 'logs'.
+    LOGGER_LEVEL (str): The level of logging to use. Default is 'DEBUG'.
+    LOGGER_DIR (str): The directory where log files will be stored. Default is 'logs'.
 """
 import logging, os
 
@@ -17,9 +16,8 @@ LOGGER_DIR = 'logs' #: The name of the directory where log files will be stored.
 
 
 def getLogger(name: str) -> logging.Logger:
-    """
-    Returns a logger object that can be used for logging purposes. The logger writes to a daily rotating file under the
-    name of the package.
+    """Returns a logger object that can be used for logging purposes. The logger
+     writes to a daily rotating file under the name of the package.
 
     Args:
         name (str): The name for the logger, usually __name__.
