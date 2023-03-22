@@ -6,11 +6,13 @@ The `Predictor` class provides functionality for performing inference on a train
 
 Classes:
     ModelUser: Abstract class designed to share model and data architectures between Trainer and Predictor.
-    Trainer: A class implementing the dhSegment Trainer interface designed to setup, fine-tune, and train a semantic segmentation model.
+    Trainer: A class implementing the dhSegment Trainer interface designed to setup, fine-tune, and train a semantic
+             segmentation model.
     Predictor: A class to perform inference on a semantic segmentation model using PredictProcess of dhSegment.
 
 Usage:
-    Import the required class from the module and create an object with the necessary parameters to use the functions provided by the class.
+    Import the required class from the module and create an object with the necessary parameters to use the functions provided
+    by the class.
 
 For more information about each class and its parameters, please refer to the class docStrings.
 
@@ -18,7 +20,6 @@ For more information about each class and its parameters, please refer to the cl
 
 import numpy as np
 import pandas as pd
-from PIL import Image
 from tqdm import tqdm
 from abc import ABC
 import os, glob, cv2, shutil
@@ -40,7 +41,7 @@ _DESC_PROGRESSBAR_POSTPROCESS = "Post-processing predictions "
 class ModelUser(ABC):
     """Abstract class designed to share model and data locations.
 
-    Args:
+    Attributes:
         labels (iterable): Iterable of labels used in the model.
         input_dir (str): Name of the input directory.
         workdir (str, optional): Name of the working directory. Defaults to "results".
@@ -72,7 +73,7 @@ class ModelUser(ABC):
 class Trainer(ModelUser):
     """A class implementing the dhSegment Trainer interface designed to setup, fine-tune, and train a semantic segmentation model.
 
-    Args:
+    Attributes:
         labels (iterable): A set of label names used to choose the appropriate resources in the workdir.
         workdir (str): The directory name of the resources and outputs. Default is "results".
         input_dir (str): The directory name of the patched dataset in the workdir. Default is "training_data".
@@ -301,7 +302,7 @@ def _n_colors(n: int) -> list:
 class Predictor(ModelUser):
     """A class to perform inference on a semantic segmentation model using PredictProcess of dhSegment.
 
-    Args:
+    Attributes:
         labels (iterable): An iterable of label names.
         input_dir (str): The path to the input data directory. Defaults to 'inference_data'.
         output_dir (str): The path to the output directory. If not provided, the directory 'predictions' will be created within the workdir. Defaults to None.
@@ -595,9 +596,9 @@ class Predictor(ModelUser):
         model_state_dict = sorted(glob.glob(os.path.join(self.model_dir, 'best_model_checkpoint_miou=*.pth')))
         
         if not model_state_dict:
-            msg = "No model! Cannot perform inference"
-            _LOGGER.error(msg)
-            raise Exception(msg)
+            no_model_error = Exception("No model! Cannot perform inference")
+            _LOGGER.error(no_model_error)
+            raise no_model_error
         
         model_params = {
             "model": {

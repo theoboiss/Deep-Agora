@@ -4,9 +4,10 @@ Functions:
     cudaDeviceSelection(preselected_device: int = -1, device_order: str = "PCI_BUS_ID") -> None:
         Selects a CUDA device and sets environment variables. 
         Raises an exception if no CUDA device is detected.
-        
     cudaInfo() -> str: Returns a string with information about the CUDA device(s).
+
 """
+
 import torch, os
 
 from deep_learning_lab import logging
@@ -17,8 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def cudaDeviceSelection(preselected_device: int = -1, device_order: str = "PCI_BUS_ID") -> None:
-    """
-    Select a CUDA device and set environment variables.
+    """Select a CUDA device and set environment variables.
 
     Args:
         preselected_device (int): The index of the device to use. Default is -1.
@@ -29,6 +29,7 @@ def cudaDeviceSelection(preselected_device: int = -1, device_order: str = "PCI_B
 
     Returns:
         None
+
     """
     
     # Get the number of CUDA devices available
@@ -36,9 +37,9 @@ def cudaDeviceSelection(preselected_device: int = -1, device_order: str = "PCI_B
 
     # Raise an exception if no CUDA device is detected
     if num_cuda_devices == 0:
-        msg = "Error: No CUDA device detected. Please ensure you have installed CUDA and have GPU devices on your infrastructure."
-        _LOGGER.error(msg)
-        raise Exception(msg)
+        no_cuda_error = Exception("Error: No CUDA device detected. Please ensure you have installed CUDA and have GPU devices on your infrastructure.")
+        _LOGGER.error(no_cuda_error)
+        raise no_cuda_error
     
     # Select the preselected device if it's valid
     if 0 <= preselected_device < num_cuda_devices:
@@ -67,12 +68,13 @@ def cudaDeviceSelection(preselected_device: int = -1, device_order: str = "PCI_B
     
 
 def cudaInfo() -> str:
-    """
-    Get information about the CUDA device(s).
+    """Get information about the CUDA device(s).
 
     Returns:
         str: A message containing information about the CUDA device(s).
+
     """
+
     # type "nvidia-smi" on linux prompt for info about CUDA
     message = f"Torch ({torch.__version__})\n"
     message += f"CUDA ({torch.version.cuda})\n"

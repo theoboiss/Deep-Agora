@@ -7,7 +7,9 @@ Functions:
 Global Variables:
     LOGGER_LEVEL (str): The level of logging to use. Default is 'DEBUG'.
     LOGGER_DIR (str): The directory where log files will be stored. Default is 'logs'.
+
 """
+
 import logging, os
 
 

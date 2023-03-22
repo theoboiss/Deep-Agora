@@ -1,14 +1,14 @@
 """Module providing functions for parsing XML files and extracting information from them.
 
 Functions:
-countTags(root, perimeter_tags, namespaces_tag): returns a dictionary with the count of each tag present in the
-                                                 XML file that matches the perimeter tags and namespaces specified.
-collectAllTags(paths_annotations): returns a dictionary with all the tags present in the annotations.
-extractAttributeElem(elem, attribute): returns the value of an attribute in an ElementTree.
-extractTagElem(path, tag, namespaces): returns an ElementTree that matches the tag and namespaces specified.
-extractAttributesTag(tag, attributes, root, perimeter_tags, namespaces_tag): returns a dictionary with the values
-                                                                             of the attributes for the specified tag
-                                                                             and perimeter tags within the ElementTree.
+    countTags(root, perimeter_tags, namespaces_tag): returns a dictionary with the count of each tag present in the
+                                                    XML file that matches the perimeter tags and namespaces specified.
+    collectAllTags(paths_annotations): returns a dictionary with all the tags present in the annotations.
+    extractAttributeElem(elem, attribute): returns the value of an attribute in an ElementTree.
+    extractTagElem(path, tag, namespaces): returns an ElementTree that matches the tag and namespaces specified.
+    extractAttributesTag(tag, attributes, root, perimeter_tags, namespaces_tag): returns a dictionary with the values
+                                                                                of the attributes for the specified tag
+                                                                                and perimeter tags within the ElementTree.
 
 Variables:
     _LOGGER: a logging instance for the module.
