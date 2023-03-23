@@ -66,15 +66,7 @@ def _resizeImgAndSave(img: Image, path: str, format: str, width: int = None, hei
 
 
 class DataStructure:
-    """A class that represents a dataset in the file system. 
-    
-    Attributes:
-        dir_data (str): The path to the directory that contains the dataset.
-        dir_images (str): The path to the directory that contains the image files.
-        dir_labels (str, optional): The path to the directory that contains the label files. Defaults to None.
-        dir_annotations (str, optional): The path to the directory that contains the annotation files. Defaults to None.
-    
-    """
+    """A class that represents a dataset in the file system."""
     
     def __init__(self, dir_data: str, dir_images: str, dir_labels: str = None, dir_annotations: str = None):
         """Initializes a DataStructure object with the given directories.
@@ -86,12 +78,22 @@ class DataStructure:
             dir_annotations (str, optional): The path to the directory that contains the annotation files. Defaults to None.
         
         """
-        self.wrapDirs(
+        self._wrapDirs(
             dir_data,
             dir_images,
             dir_labels,
             dir_annotations
         )
+        
+        
+    @staticmethod
+    def _trueNameOf(dir):
+        if not dir: return ''
+        dirs = os.path.normpath(dir).split(os.sep)
+        if RESULT_DIR and len(dirs) > 1:
+            return os.sep.join(dirs[1:])
+        else:
+            return dirs[-1]
         
     
     @staticmethod
@@ -111,7 +113,7 @@ class DataStructure:
         return sorted(paths)
 
     
-    def wrapDirs(self, dir_data: str, dir_images: str, dir_labels: str, dir_annotations: str, child_dir_data: str = "") -> None:
+    def _wrapDirs(self, dir_data: str, dir_images: str, dir_labels: str, dir_annotations: str, child_dir_data: str = "") -> None:
         """Sets the attributes for the DataStructure object based on the given directories.
         
         Args:
@@ -156,7 +158,7 @@ class DataStructure:
             self.dir_annotations = os.path.join(self.dir_data, os.path.basename(self.dir_annotations)) if self.dir_annotations else None
         
         # Call the wrapDirs method to update the directories
-        self.wrapDirs(
+        self._wrapDirs(
             dir_data= wrapper_dir_data,
             child_dir_data= self.dir_data,
             dir_images= self.dir_images,
@@ -175,23 +177,30 @@ class DataStructure:
             If RESULT_DIR is defined, it removes the first directory from the path before extracting the name.
         
         """
-        dirs = os.path.normpath(self.dir_data).split(os.sep)
-        if RESULT_DIR and len(dirs) > 1:
-            return os.sep.join(dirs[1:])
-        else:
-            return dirs[-1]
+        return self.__class__._trueNameOf(self.dir_data)
+    
+    
+    def __repr__(self) -> str:
+        """Returns a string representation of the DataStructure object.
+
+        Returns:
+            A string representing the name of the dataset.
+
+        Notes:
+            If RESULT_DIR is defined, it removes the first directory from the path before extracting the name.
+        
+        """
+        dirs = [
+            self.__class__._trueNameOf(dir)
+            for dir in (self.dir_data, self.dir_images, self.dir_labels, self.dir_annotations)
+            if dir
+        ]
+        return ', '.join(dirs)
 
 
 
 class DataPatcher:
-    """A class that transforms a dataset into a dhSegment framework compatible one containing the masks of the specified
-    labels.
-
-    Attributes:
-        original_data (DataStructure): The original data to be patched.
-        new_data (DataStructure): The new data to be created.
-
-    """
+    """A class that transforms a dataset into a dhSegment framework compatible one containing the masks of the specified labels."""
 
     def __init__(self, original_data: DataStructure, new_data: DataStructure = None):
         """Initializes the directories of data to be patched.
@@ -391,17 +400,7 @@ class DataPatcher:
 
 
 class AnnotationEncoder:
-    """A class for selecting, extracting and encoding labels and their features from a directory of annotation files.
-
-    Attributes:
-        dir_annotations (str): The directory path where the annotation files are stored.
-        files (list): The list of annotation files collected from the directory.
-        namespaces_label (dict): A dictionary of namespace prefixes and their corresponding URIs extracted from
-                                 the annotation files.
-        codes_labels (dict): A dictionary of label codes and their corresponding label names. If no labels are
-                             encoded yet, it is None.
-
-    """
+    """A class for selecting, extracting and encoding labels and their features from a directory of annotation files."""
 
     def __init__(self, dir_annotations: str):
         """Initializes an instance of AnnotationEncoder by collecting the paths of the annotation files,

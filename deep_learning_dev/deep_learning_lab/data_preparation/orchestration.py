@@ -11,12 +11,12 @@ from time import sleep
 import os
 
 from deep_learning_lab import logging
-from deep_learning_lab.data_preparation import DataStructure
-from deep_learning_lab.data_preparation.patch import AnnotationEncoder, DataPatcher
+from deep_learning_lab.data_preparation.patch import DataStructure, AnnotationEncoder, DataPatcher
 
 
 # Directory where the raw datasets are located
 RAW_DATA_DIR = "raw_datasets" # "" if current directory
+if RAW_DATA_DIR: os.makedirs(RAW_DATA_DIR, exist_ok= True)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,14 +26,7 @@ _BCC = "Baseline Competition - Complex Documents"
 
 
 class Orchestrator:
-    """A class to automate the preparation of training data.
-
-    Attributes:
-        data_structures (iterable): An iterable of DataStructure objects representing the input datasets.
-        sets_labels (iterable): An iterable of strings representing the labels of each dataset in data_structures.
-        output (DataStructure): A DataStructure object representing the output directory structure of the patched datasets.
-
-    """
+    """A class to automate the preparation of training data."""
 
     def _pageDataStructure(name_dataset: str):
         """Create the parameters for a new DataStructure object that meets the PAGE specifications.

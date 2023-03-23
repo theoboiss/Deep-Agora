@@ -39,14 +39,7 @@ _DESC_PROGRESSBAR_POSTPROCESS = "Post-processing predictions "
 
 
 class ModelUser(ABC):
-    """Abstract class designed to share model and data locations.
-
-    Attributes:
-        labels (iterable): Iterable of labels used in the model.
-        input_dir (str): Name of the input directory.
-        workdir (str, optional): Name of the working directory. Defaults to "results".
-
-    """
+    """Abstract class designed to share model and data locations."""
 
     def __init__(self, labels, input_dir: str, workdir: str = "results"):
         """Initializes the ModelUser object.
@@ -71,16 +64,7 @@ class ModelUser(ABC):
         
         
 class Trainer(ModelUser):
-    """A class implementing the dhSegment Trainer interface designed to setup, fine-tune, and train a semantic segmentation model.
-
-    Attributes:
-        labels (iterable): A set of label names used to choose the appropriate resources in the workdir.
-        workdir (str): The directory name of the resources and outputs. Default is "results".
-        input_dir (str): The directory name of the patched dataset in the workdir. Default is "training_data".
-        train_ratio (float): The ratio of data to use for training (between 0.0 and 1.0). Default is 0.80.
-        val_ratio (float): The ratio of data to use for validation (between 0.0 and 1.0-train_ratio). Default is 0.10.
-
-    """
+    """A class implementing the dhSegment Trainer interface designed to setup, fine-tune, and train a semantic segmentation model."""
     
     def __init__(self, labels, workdir: str = "results", input_dir: str = "training_data", train_ratio: float = 0.80, val_ratio: float = 0.10):
         """Initialize the Trainer class instance.
@@ -300,29 +284,19 @@ def _n_colors(n: int) -> list:
 
 
 class Predictor(ModelUser):
-    """A class to perform inference on a semantic segmentation model using PredictProcess of dhSegment.
-
-    Attributes:
-        labels (iterable): An iterable of label names.
-        input_dir (str): The path to the input data directory. Defaults to 'inference_data'.
-        output_dir (str): The path to the output directory. If not provided, the directory 'predictions' will be created within the workdir. Defaults to None.
-        output_size (tuple): The output size of the segmentation model. Defaults to None.
-        from_csv (str): The name of the CSV file containing the input data. Defaults to None.
-        reset_input (bool): Whether or not to delete the contents of the input directory before copying new input data. Defaults to True.
-    
-    """
+    """A class to perform inference on a semantic segmentation model using PredictProcess of dhSegment."""
     
     def __init__(self, labels, input_dir: str = 'inference_data', output_dir: str = None, output_size: tuple = None,
-                 from_csv: str = None, reset_input: bool = True):
+                 from_csv: str = None, reset_from_csv: bool = True):
         """Initialize the Predictor class instance.
 
         Args:
             labels (iterable): An iterable of label names.
-            input_dir (str): The path to the input data directory. Defaults to 'inference_data'.
-            output_dir (str): The path to the output directory. If not provided, the directory 'predictions' will be created within the workdir. Defaults to None.
-            output_size (tuple): The output size of the segmentation model. Defaults to None.
-            from_csv (str): The name of the CSV file containing the input data. Defaults to None.
-            reset_input (bool): Whether or not to delete the contents of the input directory before copying new input data. Defaults to True.
+            input_dir (str, optional): The path to the input data directory. Defaults to 'inference_data'.
+            output_dir (str, optional): The path to the output directory. If not provided, the directory 'predictions' will be created within the workdir. Defaults to None.
+            output_size (tuple, optional): The output size of the segmentation model. Defaults to None.
+            from_csv (str, optional): The name of the CSV file containing the input data. Defaults to None.
+            reset_input (bool, optional): Whether or not to delete the contents of the input directory before copying new input data. Defaults to True.
         
         """
         super().__init__(labels, input_dir)
@@ -341,7 +315,7 @@ class Predictor(ModelUser):
         
         # Convert input data from CSV to folder
         if from_csv:
-            self._dataCSVToFolder(os.path.join(self.workdir, from_csv), reset_input)
+            self._dataCSVToFolder(os.path.join(self.workdir, from_csv), reset_from_csv)
             
         # Create output directory if it does not exist
         if not os.path.exists(self.output_dir):
@@ -400,6 +374,9 @@ class Predictor(ModelUser):
 
         Returns:
             ndarray: Image with regions drawn.
+
+        Todo:
+            Use self.colors to use different colors according to the label.
 
         """
         # If no image is provided, create a blank canvas
@@ -473,7 +450,7 @@ class Predictor(ModelUser):
             result (dict): A dictionary containing the image and labels.
             bounding_box (bool): Whether to use bounding box or contours. Default is False.
             verbose (bool): Whether to print verbose output. Default is True.
-        
+
         """
         result['regions'] = cls.__drawRegions(
             result['labels'],
@@ -506,7 +483,7 @@ class Predictor(ModelUser):
             preds (ndarray): numpy array of predicted probabilities for each class.
         
         Returns:
-            mask_labels (ndarray): numpy array of the selected labels, one-hot encoded.
+            mask_labels (ndarray): numpy array of the selected labels.
         
         """
         best_preds = np.argmax(preds, axis=0).astype('uint8')
@@ -524,17 +501,16 @@ class Predictor(ModelUser):
         
         """
         # Parse name
-        result['name'] = os.path.splitext(os.path.basename(result['image_path']))[0]
+        result['name'] = os.path.splitext(os.path.basename(result['path']))[0]
 
         # Load probas
-        probas = np.load(result['probas_path'])
-        result['probasMaps'] = [self.__class__.probasToMaps(probas, c) for c in range(self.num_classes)]
+        result['probasMaps'] = [self.__class__.probasToMaps(result['probas'], c) for c in range(self.num_classes)]
         
         # Convert probas to semantic segmentation
-        result['labels'] = self._selectLabels(probas)
+        result['labels'] = self._selectLabels(result['probas'])
 
         # Load image
-        image = cv2.imread(result['image_path'])
+        image = cv2.imread(result['path'])
         if self.output_size: # Resize the image so it has self.output_size pixels
             scale_factor = (image.shape[0]*image.shape[1] / self.output_size)**0.5
             new_width = int(image.shape[1] // scale_factor)
