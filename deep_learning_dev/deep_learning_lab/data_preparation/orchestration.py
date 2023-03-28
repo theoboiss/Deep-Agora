@@ -11,12 +11,13 @@ from time import sleep
 import os
 
 from deep_learning_lab import logging
-from deep_learning_lab.data_preparation.patch import DataStructure, AnnotationEncoder, DataPatcher
+import deep_learning_lab.data_preparation.patch as patch
 
 
-# Directory where the raw datasets are located
-RAW_DATA_DIR = "raw_datasets" # "" if current directory
-if RAW_DATA_DIR: os.makedirs(RAW_DATA_DIR, exist_ok= True)
+
+RAW_DATA_DIR = "raw_datasets" # "" if current directory. Tell where the raw datasets are located
+patch.RESULT_DIR = "results" # "" if deactivated. Also useful for temporary storage on Google Collab
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,10 +39,10 @@ class Orchestrator:
             A DataStructure object representing the dataset structure that meets the PAGE specifications.
 
         """
-        return DataStructure(dir_data= name_dataset, dir_images= "", dir_annotations= "page")
+        return patch.DataStructure(dir_data= name_dataset, dir_images= "", dir_annotations= "page")
 
     DATASETS = {
-        'reid': DataStructure(
+        'reid': patch.DataStructure(
             dir_data= os.path.join(RAW_DATA_DIR, "REID2019"),
             dir_images= "REID2019_ExampleSet",
             dir_annotations= "REID2019_ExampleSet"
@@ -82,7 +83,7 @@ class Orchestrator:
             self.output = self.__class__._implementDataStructure(output_structure)  # If an output_structure is provided, use it as the output attribute
         else:
             # Otherwise, create a default DataStructure object
-            self.output = DataStructure(dir_data= "training_data", dir_images= "images", dir_labels= "labels")
+            self.output = patch.DataStructure(dir_data= "training_data", dir_images= "images", dir_labels= "labels")
         
         
     @property
@@ -112,16 +113,16 @@ class Orchestrator:
             ValueError: If the dataset is not a DataStructure, list, dict, or string.
         
         """
-        if isinstance(dataset, DataStructure):
+        if isinstance(dataset, patch.DataStructure):
             return dataset
         
         elif isinstance(dataset, list):
             assert len(dataset) == 3   # Ensure the list has 3 elements
             assert sum(map(lambda path: not isinstance(path, str), dataset)) == 0
-            return DataStructure(*dataset)
+            return patch.DataStructure(*dataset)
         
         elif isinstance(dataset, dict):
-            return DataStructure(**dataset)
+            return patch.DataStructure(**dataset)
 
         elif isinstance(dataset, str):
             dataset = dataset.lower()
@@ -220,7 +221,7 @@ class Orchestrator:
         
         for data_structure, set_labels in self.data_specs:
             # Clean absent labels from the data structure's annotations
-            ae = AnnotationEncoder(data_structure.dir_annotations)
+            ae = patch.AnnotationEncoder(data_structure.dir_annotations)
             ae.cleanAbsentLabels(set_labels)
 
             if prompt:
@@ -258,7 +259,7 @@ class Orchestrator:
         if verbose:
             # Calculate statistics for the selected annotations and print them to the console
             for data_structure, set_labels in self.data_specs:
-                ae = AnnotationEncoder(data_structure.dir_annotations)
+                ae = patch.AnnotationEncoder(data_structure.dir_annotations)
                 print(f"VALIDATION OF `{data_structure}`")
                 self.__class__._analyze(ae.calculateStatistics(set_labels), verbose)
                 print()
@@ -301,7 +302,7 @@ class Orchestrator:
                     if print_progress: sleep(0.25)
 
                 # Create DataPatcher object and patch the data
-                patcher = DataPatcher(data_structure, self.output)
+                patcher = patch.DataPatcher(data_structure, self.output)
                 patcher.patch(
                     set_labels,
                     resize,

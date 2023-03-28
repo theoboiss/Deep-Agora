@@ -129,8 +129,8 @@ class DataStructure:
         """
         self.dir_data = os.path.join(dir_data, child_dir_data) if child_dir_data else dir_data
         self.dir_images = os.path.join(dir_data, dir_images)
-        self.dir_labels = os.path.join(dir_data, dir_labels) if dir_labels else None
-        self.dir_annotations = os.path.join(dir_data, dir_annotations) if dir_annotations else None
+        self.dir_labels = os.path.join(dir_data, dir_labels) if dir_labels != None else None
+        self.dir_annotations = os.path.join(dir_data, dir_annotations) if dir_annotations != None else None
     
     
     def wrapDirsSelf(self, wrapper_dir_data: str) -> None:
@@ -152,10 +152,11 @@ class DataStructure:
                 RESULT_DIR,
                 wrapper_dir_data
             )
+            
             self.dir_data = os.path.basename(self.dir_data)
             self.dir_images = os.path.join(self.dir_data, os.path.basename(self.dir_images))
-            self.dir_labels = os.path.join(self.dir_data, os.path.basename(self.dir_labels)) if self.dir_labels else None
-            self.dir_annotations = os.path.join(self.dir_data, os.path.basename(self.dir_annotations)) if self.dir_annotations else None
+            self.dir_labels = os.path.join(self.dir_data, os.path.basename(self.dir_labels)) if self.dir_labels != None else None
+            self.dir_annotations = os.path.join(self.dir_data, os.path.basename(self.dir_annotations)) if self.dir_annotations != None else None
         
         # Call the wrapDirs method to update the directories
         self._wrapDirs(
@@ -728,7 +729,7 @@ class MaskBuilder:
         draw.polygon(points, fill= colour)
 
         
-def buildAllMasks(self, new_size: tuple, verbose: bool=True) -> list:
+    def buildAllMasks(self, new_size: tuple, verbose: bool=True) -> list:
         """Builds a mask for all shapes in the shapes_label_name dictionary with the specified new size and returns the list
         of generated masks.
 

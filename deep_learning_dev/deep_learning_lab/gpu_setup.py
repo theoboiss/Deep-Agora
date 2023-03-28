@@ -52,7 +52,7 @@ def cudaDeviceSelection(preselected_device: int = -1, device_order: str = "PCI_B
         # Wait for the user to select a valid device
         valid = False
         while not valid:
-            selected_device = input("Select a device:")
+            selected_device = int(input("Select a device:"))
             if 0 <= selected_device < num_cuda_devices:
                 valid = True
         _LOGGER.info(f"User selected {selected_device} device")

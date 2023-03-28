@@ -41,20 +41,20 @@ _DESC_PROGRESSBAR_POSTPROCESS = "Post-processing predictions "
 class ModelUser(ABC):
     """Abstract class designed to share model and data locations."""
 
-    def __init__(self, labels, input_dir: str, workdir: str = "results"):
+    def __init__(self, labels, input_dir: str, working_dir: str = "results"):
         """Initializes the ModelUser object.
 
         Args:
             labels (iterable): Iterable of labels used in the model.
             input_dir (str): Name of the input directory.
-            workdir (str, optional): Name of the working directory. Defaults to "results".
+            working_dir (str, optional): Name of the working directory. Defaults to "results".
 
         """
-        self.workdir = os.path.join(workdir, '_'.join(labels))
-        os.makedirs(self.workdir, exist_ok= True)
-        self.data_dir = os.path.join(self.workdir, input_dir)
+        self.working_dir = os.path.join(working_dir, '_'.join(labels))
+        os.makedirs(self.working_dir, exist_ok= True)
+        self.data_dir = os.path.join(self.working_dir, input_dir)
         os.makedirs(self.data_dir, exist_ok= True)
-        self.model_dir = os.path.join(self.workdir, "model")
+        self.model_dir = os.path.join(self.working_dir, "model")
         
         
     def __str__(self) -> str:
@@ -66,20 +66,20 @@ class ModelUser(ABC):
 class Trainer(ModelUser):
     """A class implementing the dhSegment Trainer interface designed to setup, fine-tune, and train a semantic segmentation model."""
     
-    def __init__(self, labels, workdir: str = "results", input_dir: str = "training_data", train_ratio: float = 0.80, val_ratio: float = 0.10):
+    def __init__(self, labels, working_dir: str = "results", input_dir: str = "training_data", train_ratio: float = 0.80, val_ratio: float = 0.10):
         """Initialize the Trainer class instance.
 
         Args:
-            labels (iterable): A set of label names used to choose the appropriate resources in the workdir.
-            workdir (str): The directory name of the resources and outputs. Default is "results".
-            input_dir (str): The directory name of the patched dataset in the workdir. Default is "training_data".
+            labels (iterable): A set of label names used to choose the appropriate resources in the working_dir.
+            working_dir (str): The directory name of the resources and outputs. Default is "results".
+            input_dir (str): The directory name of the patched dataset in the working_dir. Default is "training_data".
             train_ratio (float): The ratio of data to use for training (between 0.0 and 1.0). Default is 0.80.
             val_ratio (float): The ratio of data to use for validation (between 0.0 and 1.0-train_ratio). Default is 0.10.
 
         """
-        super().__init__(labels, input_dir, workdir)
+        super().__init__(labels, input_dir, working_dir)
         
-        self.tensorboard_dir = os.path.join(self.workdir, 'tensorboard', 'log')
+        self.tensorboard_dir = os.path.join(self.working_dir, 'tensorboard', 'log')
         self._setupEnvironment(train_ratio, val_ratio)
 
         
@@ -148,7 +148,7 @@ class Trainer(ModelUser):
        
     
     def _setupTraining(self, batch_size: int, epochs: int, learning_rate: float, gamma_exp_lr: float,
-                       evaluate_every_epoch: int, val_patience: int, output_size: int, repeat_dataset: int) -> dict:
+                       evaluate_every_epoch: int, val_patience: int, repeat_dataset: int, output_size: int) -> dict:
         """Configure training parameters and return as a dictionary.
 
         Args:
@@ -206,7 +206,7 @@ class Trainer(ModelUser):
         
         
     def train(self, batch_size: int = 1, epochs: int = 1, learning_rate: float = 1e-1, gamma_exp_lr: float = 1.0,
-              evaluate_every_epoch: int = 1, val_patience: int = 1, repeat_dataset: int = 1, output_size: int = 1e6) -> None:
+              evaluate_every_epoch: int = 0, val_patience: int = 1, repeat_dataset: int = 1, output_size: int = 1e6) -> None:
         """Train the model using the specified hyperparameters.
 
         Args:
@@ -226,7 +226,7 @@ class Trainer(ModelUser):
 
         # Setup training parameters
         params = self._setupTraining(batch_size, epochs, learning_rate, gamma_exp_lr, evaluate_every_epoch,
-                                     val_patience, output_size, repeat_dataset)
+                                     val_patience, repeat_dataset, output_size)
 
         # Create a trainer instance
         trainer = dhTrainer.from_params(params)
@@ -286,26 +286,26 @@ def _n_colors(n: int) -> list:
 class Predictor(ModelUser):
     """A class to perform inference on a semantic segmentation model using PredictProcess of dhSegment."""
     
-    def __init__(self, labels, input_dir: str = 'inference_data', output_dir: str = None, output_size: tuple = None,
+    def __init__(self, labels, working_dir: str = "results", input_dir: str = 'inference_data', output_dir: str = None, output_size: tuple = None,
                  from_csv: str = None, reset_from_csv: bool = True):
         """Initialize the Predictor class instance.
 
         Args:
             labels (iterable): An iterable of label names.
             input_dir (str, optional): The path to the input data directory. Defaults to 'inference_data'.
-            output_dir (str, optional): The path to the output directory. If not provided, the directory 'predictions' will be created within the workdir. Defaults to None.
+            output_dir (str, optional): The path to the output directory. If not provided, the directory 'predictions' will be created within the working_dir. Defaults to None.
             output_size (tuple, optional): The output size of the segmentation model. Defaults to None.
             from_csv (str, optional): The name of the CSV file containing the input data. Defaults to None.
             reset_input (bool, optional): Whether or not to delete the contents of the input directory before copying new input data. Defaults to True.
         
         """
-        super().__init__(labels, input_dir)
+        super().__init__(labels, input_dir, working_dir)
         
         # Set output directory
         if output_dir:
             self.output_dir = output_dir
         else:
-            self.output_dir = os.path.join(self.workdir, 'predictions')
+            self.output_dir = os.path.join(self.working_dir, 'predictions')
             
         # Set number of classes, colors, and output size
         self.num_classes = len(labels)+1
@@ -315,7 +315,7 @@ class Predictor(ModelUser):
         
         # Convert input data from CSV to folder
         if from_csv:
-            self._dataCSVToFolder(os.path.join(self.workdir, from_csv), reset_from_csv)
+            self._dataCSVToFolder(os.path.join(self.working_dir, from_csv), reset_from_csv)
             
         # Create output directory if it does not exist
         if not os.path.exists(self.output_dir):
@@ -570,9 +570,11 @@ class Predictor(ModelUser):
         }
         
         model_state_dict = sorted(glob.glob(os.path.join(self.model_dir, 'best_model_checkpoint_miou=*.pth')))
+        if not model_state_dict:
+            model_state_dict = sorted(glob.glob(os.path.join(self.model_dir, 'train_model_checkpoint_iter=*.pth')))
         
         if not model_state_dict:
-            no_model_error = Exception("No model! Cannot perform inference")
+            no_model_error = Exception(f"No model in {self.model_dir}! Cannot perform inference")
             _LOGGER.error(no_model_error)
             raise no_model_error
         
@@ -595,7 +597,7 @@ class Predictor(ModelUser):
         return process_params
     
     
-    def start(self, batch_size= 4, drawRegions= True, cutVignettes= True, bounding_box= False, verbose= True) -> list:
+    def start(self, batch_size= 1, drawRegions= True, cutVignettes= True, bounding_box= False, verbose= True) -> list:
         """Starts the inference process and saves the vignettes in the output directory.
         
         Args:
@@ -617,7 +619,7 @@ class Predictor(ModelUser):
         _LOGGER.info(f"Starting inference of model from {self.model_dir}")
         self.results = dhPredictor.process()
         
-        _LOGGER.info("Post-process predictions")
+        _LOGGER.info(f"Post-process predictions {self.data_dir}")
         for result in tqdm(self.results, desc= _DESC_PROGRESSBAR_POSTPROCESS, disable= not verbose):
             self._render(result)
             if drawRegions:

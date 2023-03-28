@@ -77,6 +77,7 @@ A dataset to be patched must be specified in the API by its main directory, its 
 It can either be added to the defaults datasets of the **`deep_learning_lab.orchestration`** module or be added via the *`Orchestrator.ingestDatasets`* method.
 
 By default, the patched dataset is in the *results* folder and in the sub-folder named after the *"specified labels"*, under the name *training_data*.
+For example: if you patched a dataset with TextLine label, the dataset will be at the location *results/TextLine/training_data/*.
 
 
 ### Training
@@ -88,7 +89,7 @@ The trainer can be configured with many parameters relating to the split of the 
 Note that as few labels as possible should be specified at a time so that a model can be developed for each of them.
 This allows greater modularity for future Deep-Agora software.
 
-By default, the dataset to be used is *training_data* and the *model* and *tensorboard* directories should be in the same location. *model* contains the best serialized models and *tensorboard* contains the logs of the metrics acquired during the training.
+By default, the dataset to be used is *training_data* (*results/"specified labels"/training_data*). The *model* and *tensorboard* directories should be in the same location. *model* contains the best serialized models and *tensorboard* contains the logs of the metrics acquired during the training.
 
 
 ### Inference

@@ -11,6 +11,7 @@ Global Variables:
 """
 
 import logging, os
+from logging import handlers
 
 
 LOGGER_LEVEL = 'DEBUG' #: The logging level used for the logger.
@@ -41,7 +42,7 @@ def getLogger(name: str) -> logging.Logger:
             name = name[module_index+1:]
     
     # Set up the logger
-    handler = logging.handlers.TimedRotatingFileHandler(os.path.join(LOGGER_DIR, log_filename), when= 'd')
+    handler = handlers.TimedRotatingFileHandler(os.path.join(LOGGER_DIR, log_filename), when= 'd')
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
     handler.setFormatter(formatter)
     
