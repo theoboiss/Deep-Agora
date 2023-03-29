@@ -1,11 +1,8 @@
 import os, sys, glob, logging, pytest, shutil
 
-# Add the absolute path of deep_learning_dev to the PATH
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'deep_learning_dev')))
 
 # Neutralise the loggers of the data.preparation package
-for module in ('orchestration', 'patch', 'xml_parser'):
-    logging.getLogger('deep_learning_lab.data_preparation.'+module).disabled = True
+logging.getLogger('deep_learning_lab.data_preparation').disabled = True
 
     
 from deep_learning_lab.data_preparation import orchestration, patch
@@ -24,7 +21,7 @@ raw_data_dir = os.path.join(test_workdir,"raw_page_dataset")
 
 
 @pytest.fixture(scope='session', autouse= True)
-def test_env():
+def setup_session():
     """Sets up the test directory by testing if the required data has already been manually downloaded.
     
     Expected structure of the file system:

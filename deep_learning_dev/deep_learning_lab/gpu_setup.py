@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 
-def cudaDeviceSelection(preselected_device: int = -1, device_order: str = "PCI_BUS_ID") -> None:
+def cudaDeviceSelection(preselected_device: int = -1, device_order: str = "PCI_BUS_ID") -> int:
     """Select a CUDA device and set environment variables.
 
     Args:
@@ -28,24 +28,28 @@ def cudaDeviceSelection(preselected_device: int = -1, device_order: str = "PCI_B
         Exception: If no CUDA device is detected.
 
     Returns:
-        None
+        int: The index of the selected device. -1 if it is the CPU.
 
     """
-    
+    # Do not select CUDA device if CUDA is not available
+    if not torch.cuda.is_available():
+        _LOGGER.warning("CUDA is not available. CPU selected")
+        return -1
+        
     # Get the number of CUDA devices available
     num_cuda_devices = torch.cuda.device_count()
 
-    # Raise an exception if no CUDA device is detected
+    # Do not select CUDA device if no GPU is detected
     if num_cuda_devices == 0:
-        no_cuda_error = Exception("Error: No CUDA device detected. Please ensure you have installed CUDA and have GPU devices on your infrastructure.")
-        _LOGGER.error(no_cuda_error)
-        raise no_cuda_error
+        _LOGGER.warning("Error: No CUDA device detected. Please ensure you have GPU devices on your infrastructure.")
+        return -1
     
-    # Select the preselected device if it's valid
-    if 0 <= preselected_device < num_cuda_devices:
+    # Select the preselected device if it is valid
+    if -1 <= preselected_device < num_cuda_devices:
         selected_device = preselected_device
     else:
         # If the preselected device is not valid, print the list of available devices
+        print(f"Device -1: CPU")
         for device in range(num_cuda_devices):
             print(f"Device {device}: {torch.cuda.get_device_properties(device)}")
 
@@ -53,21 +57,29 @@ def cudaDeviceSelection(preselected_device: int = -1, device_order: str = "PCI_B
         valid = False
         while not valid:
             selected_device = int(input("Select a device:"))
-            if 0 <= selected_device < num_cuda_devices:
+            if -1 <= selected_device < num_cuda_devices:
                 valid = True
-        _LOGGER.info(f"User selected {selected_device} device")
 
-
+    
+    # Log CUDA information using the cudaInfo function
+    _LOGGER.info(f"Infrastructure: %s", cudaInfo(selected_device).replace('\n', '; '))
+    
+    # if CPU has been selected, GPU setup is ignored
+    if selected_device == -1:
+        return selected_device
+    
     # Set the CUDA environment variables
     os.environ["CUDA_DEVICE_ORDER"] = device_order
     os.environ["CUDA_VISIBLE_DEVICES"] = str(selected_device)
     torch.cuda.set_device(selected_device)
     
     # Log CUDA information using the cudaInfo function
-    _LOGGER.info("Infrastructure: %s", cudaInfo().replace('\n', '; '))
+    _LOGGER.info("Infrastructure: %s", cudaInfo(selected_device).replace('\n', '; '))
+    
+    return selected_device
     
 
-def cudaInfo() -> str:
+def cudaInfo(device) -> str:
     """Get information about the CUDA device(s).
 
     Returns:
@@ -78,6 +90,10 @@ def cudaInfo() -> str:
     # type "nvidia-smi" on linux prompt for info about CUDA
     message = f"Torch ({torch.__version__})\n"
     message += f"CUDA ({torch.version.cuda})\n"
-    message += f"GPU ({torch.cuda.get_device_properties(0).name})\n"
-    message += f"CUDA memory ({torch.cuda.get_device_properties(0).total_memory//1024**2/1000:.2f} GB)"
+    if device == -1:
+        message += "CPU"
+    elif torch.cuda.is_available() and -1 < device < torch.cuda.device_count():
+        message += f"GPU ({torch.cuda.get_device_properties(device).name})\n"
+        message += f"Total CUDA memory ({torch.cuda.get_device_properties(device).total_memory//1024**2/1000:.2f} GB)\n"
+        message += f"Allocated CUDA memory ({torch.cuda.memory_allocated()//1024**2/1000:.2f} GB)"
     return message

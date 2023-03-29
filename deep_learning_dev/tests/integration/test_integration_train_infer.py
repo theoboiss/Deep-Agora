@@ -1,16 +1,12 @@
 import os, sys, glob, logging, pytest, shutil
 
-# Add the absolute path of deep_learning_dev to the PATH
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'deep_learning_dev')))
 
 # Neutralise the loggers of the data.preparation package
-for module in ('orchestration', 'patch', 'xml_parser'):
-    logging.getLogger('deep_learning_lab.data_preparation.'+module).disabled = True
+logging.getLogger('deep_learning_lab.data_preparation').disabled = True
 
 
 from deep_learning_lab import model
 from deep_learning_lab.data_preparation import orchestration, patch
-import deep_learning_lab.gpu_setup as gpu
 
 
 test_workdir = "tests/integration/"
@@ -55,7 +51,7 @@ def setup_session():
 
 
 @pytest.fixture(scope='session')
-def test_train_env():
+def setup_train_env():
     """Sets up the test directory by testing if the required data has already been manually downloaded.
     
     Expected structure of the file system at the end:
@@ -98,12 +94,9 @@ def test_train_env():
                 is_mask = True
     bools = (is_images_dir, is_labels_dir, is_class_file, is_copied_image, is_mask)
     assert all(bools), "WARNING: Please execute `test_integration_prep_files` first to patch data"
-    
-    # Sets up the GPU environment
-    gpu.cudaDeviceSelection(preselected_device= 0)
 
 
-def test_training(test_train_env):
+def test_training(setup_train_env):
     """Train a dummy model.
     
     Expected structure of the file system at the end:
@@ -129,9 +122,10 @@ def test_training(test_train_env):
     trainer = model.Trainer(
         labels= set_labels,
         input_dir= "test_data",
-        working_dir= patch.RESULT_DIR,
         train_ratio= 0.5,
-        val_ratio= 0.5
+        val_ratio= 0.5,
+        preselected_device= 1,
+        working_dir= patch.RESULT_DIR
     )
     
     csv_files = glob.glob(os.path.join(dataset_path, '*.csv'))
@@ -140,7 +134,7 @@ def test_training(test_train_env):
         for f in ('data', 'train', 'val')
     ), "Missing data files among 'data.csv', 'train.csv', 'val.csv'"
     
-    trainer.train(repeat_dataset= 2,val_patience= 2,evaluate_every_epoch= 3,epochs= 6,)
+    trainer.train()
     
     model_dir = os.path.join(labels_dir_path, 'model')
     model_files = [name for name in os.listdir(model_dir) if os.path.isfile(os.path.join(model_dir, name))]
@@ -155,7 +149,7 @@ def test_training(test_train_env):
     
     
 @pytest.fixture(scope='session')
-def test_infer_env():
+def setup_infer_env():
     """Sets up the test directory by testing if the required model has already been trained.
     
     Expected structure of the file system at the end:
@@ -186,7 +180,7 @@ def test_infer_env():
     f"No model has been serialized or serialized files. {model_dir} does not contain checkpoint"
     
 
-def test_inference(test_infer_env):
+def test_inference(setup_infer_env):
     """Make inference using a dummy predictor.
     
     Expected structure of the file system at the end:
@@ -208,7 +202,8 @@ def test_inference(test_infer_env):
     predictor = model.Predictor(
         set_labels,
         input_dir= os.path.join("test_data", "images"),
-        working_dir= patch.RESULT_DIR,
+        preselected_device= 1,
+        working_dir= patch.RESULT_DIR
     )
     results = predictor.start(verbose= False)
     

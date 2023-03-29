@@ -58,7 +58,7 @@ def _resizeImgAndSave(img: Image, path: str, format: str, width: int = None, hei
             width = int((height / float(img.size[1])) * float(img.size[0]))
         elif not height:
             height = int((width / float(img.size[0])) * float(img.size[1]))
-        img = img.resize((width, height), Image.ANTIALIAS)
+        img = img.resize((width, height), Image.LANCZOS)
 
     # Save the image in the specified format
     img.save(path, format= format)

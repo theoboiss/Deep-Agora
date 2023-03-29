@@ -30,6 +30,7 @@ from dh_segment_torch.training import Trainer as dhTrainer
 from dh_segment_torch.inference import PredictProcess
 
 from deep_learning_lab import logging
+import deep_learning_lab.gpu_setup as gpu
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,20 +42,26 @@ _DESC_PROGRESSBAR_POSTPROCESS = "Post-processing predictions "
 class ModelUser(ABC):
     """Abstract class designed to share model and data locations."""
 
-    def __init__(self, labels, input_dir: str, working_dir: str = "results"):
+    def __init__(self, labels, preselected_device: int, input_dir: str, working_dir: str = "results"):
         """Initializes the ModelUser object.
 
         Args:
             labels (iterable): Iterable of labels used in the model.
+            preselected_device (int): The index of the GPU device to use for computations (-1 => CPU). Default is -1.
             input_dir (str): Name of the input directory.
             working_dir (str, optional): Name of the working directory. Defaults to "results".
 
         """
         self.working_dir = os.path.join(working_dir, '_'.join(labels))
-        os.makedirs(self.working_dir, exist_ok= True)
         self.data_dir = os.path.join(self.working_dir, input_dir)
-        os.makedirs(self.data_dir, exist_ok= True)
         self.model_dir = os.path.join(self.working_dir, "model")
+        os.makedirs(self.data_dir, exist_ok= True)
+        
+        # Select a GPU/CPU device for computations
+        self.device = 'cpu'
+        device = gpu.cudaDeviceSelection(preselected_device)
+        if -1 < device:
+            self.device = f"cuda:{device}"
         
         
     def __str__(self) -> str:
@@ -66,19 +73,20 @@ class ModelUser(ABC):
 class Trainer(ModelUser):
     """A class implementing the dhSegment Trainer interface designed to setup, fine-tune, and train a semantic segmentation model."""
     
-    def __init__(self, labels, working_dir: str = "results", input_dir: str = "training_data", train_ratio: float = 0.80, val_ratio: float = 0.10):
+    def __init__(self, labels, input_dir: str = 'training_data', train_ratio: float = 0.80, val_ratio: float = 0.10,
+                 preselected_device: int = 0, working_dir: str = "results"):
         """Initialize the Trainer class instance.
 
         Args:
             labels (iterable): A set of label names used to choose the appropriate resources in the working_dir.
-            working_dir (str): The directory name of the resources and outputs. Default is "results".
             input_dir (str): The directory name of the patched dataset in the working_dir. Default is "training_data".
             train_ratio (float): The ratio of data to use for training (between 0.0 and 1.0). Default is 0.80.
             val_ratio (float): The ratio of data to use for validation (between 0.0 and 1.0-train_ratio). Default is 0.10.
+            preselected_device (int): The index of the GPU device to use for computations (-1 => CPU). Default is -1.
+            working_dir (str): The directory name of the resources and outputs. Default is "results".
 
         """
-        super().__init__(labels, input_dir, working_dir)
-        
+        super().__init__(labels, preselected_device, input_dir, working_dir)
         self.tensorboard_dir = os.path.join(self.working_dir, 'tensorboard', 'log')
         self._setupEnvironment(train_ratio, val_ratio)
 
@@ -171,7 +179,7 @@ class Trainer(ModelUser):
                 "type": "image_csv", # Image csv dataset
                 "csv_filename": os.path.join(self.data_dir, "train.csv"),
                 "base_dir": self.data_dir,
-                "repeat_dataset": repeat_dataset, # Repeat 4 times the data since we have little
+                "repeat_dataset": repeat_dataset, # Repeat the data since we have little
                 "compose": {"transforms": [{"type": "fixed_size_resize", "output_size": output_size}]} # Resize to a fixed size, could add other transformations.
             },
             "val_dataset": {
@@ -196,6 +204,7 @@ class Trainer(ModelUser):
             "num_epochs": epochs, # Number of epochs for training
             "evaluate_every_epoch": evaluate_every_epoch, # Number of epochs between each validation of the model
             "batch_size": batch_size, # Batch size (to be changed if the allocated GPU has little memory)
+            "device": self.device,
             "num_data_workers": 0,
             "track_train_metrics": False,
             "loggers": [
@@ -233,7 +242,14 @@ class Trainer(ModelUser):
 
         # Train the model
         _LOGGER.info(f"Starting training of model in {self.model_dir}")
-        trainer.train()
+        try:
+            trainer.train()
+        except RuntimeError as re:
+            _LOGGER.error(re)
+            if str(re).startswith("CUDA out of memory."):
+                print("It seems that there is no more free memory on the GPU. " + \
+                      "Try selecting another GPU/CPU or making sure no one else is overloading it.")
+            raise re
         _LOGGER.info(f"Model trained and serialized")
         
         
@@ -286,8 +302,8 @@ def _n_colors(n: int) -> list:
 class Predictor(ModelUser):
     """A class to perform inference on a semantic segmentation model using PredictProcess of dhSegment."""
     
-    def __init__(self, labels, working_dir: str = "results", input_dir: str = 'inference_data', output_dir: str = None, output_size: tuple = None,
-                 from_csv: str = None, reset_from_csv: bool = True):
+    def __init__(self, labels, input_dir: str = 'inference_data', output_dir: str = 'predictions', output_size: tuple = None,
+                 from_csv: str = None, reset_from_csv: bool = True, preselected_device: int = 0, working_dir: str = 'results'):
         """Initialize the Predictor class instance.
 
         Args:
@@ -297,15 +313,12 @@ class Predictor(ModelUser):
             output_size (tuple, optional): The output size of the segmentation model. Defaults to None.
             from_csv (str, optional): The name of the CSV file containing the input data. Defaults to None.
             reset_input (bool, optional): Whether or not to delete the contents of the input directory before copying new input data. Defaults to True.
+            preselected_device (int): The index of the GPU device to use for computations (-1 => CPU). Default is -1.
+            working_dir (str): The directory name of the resources and outputs. Default is "results".
         
         """
-        super().__init__(labels, input_dir, working_dir)
-        
-        # Set output directory
-        if output_dir:
-            self.output_dir = output_dir
-        else:
-            self.output_dir = os.path.join(self.working_dir, 'predictions')
+        super().__init__(labels, preselected_device, input_dir, working_dir)
+        self.output_dir = os.path.join(self.working_dir, output_dir)
             
         # Set number of classes, colors, and output size
         self.num_classes = len(labels)+1
@@ -443,13 +456,12 @@ class Predictor(ModelUser):
     
     
     @classmethod
-    def _drawRegions(cls, result: dict, bounding_box: bool = False, verbose: bool = True) -> None:
+    def _drawRegions(cls, result: dict, bounding_box: bool = False) -> None:
         """Draw the regions in the image.
         
         Args:
             result (dict): A dictionary containing the image and labels.
             bounding_box (bool): Whether to use bounding box or contours. Default is False.
-            verbose (bool): Whether to print verbose output. Default is True.
 
         """
         result['regions'] = cls.__drawRegions(
@@ -460,13 +472,12 @@ class Predictor(ModelUser):
     
     
     @classmethod
-    def _cutVignettes(cls, result: dict, bounding_box: bool = False, verbose: bool = True) -> None:
+    def _cutVignettes(cls, result: dict, bounding_box: bool = False) -> None:
         """Cut out the vignettes from an image and add them to the result dictionary.
         
         Args:
             result (dict): A dictionary containing the image and labels.
             bounding_box (bool): Whether to use bounding box or contours. Default is False.
-            verbose (bool): Whether to print verbose output. Default is True.
 
         """
         result['vignettes'] = cls.__cutVignettes(
@@ -585,7 +596,7 @@ class Predictor(ModelUser):
                 },
                 "num_classes": self.num_classes,
                 "model_state_dict": model_state_dict[-1],
-                "device": "cuda:0"
+                "device": self.device
         }
 
         process_params = {
@@ -605,7 +616,7 @@ class Predictor(ModelUser):
             drawRegions (bool): Whether to draw bounding boxes on the input images.
             cutVignettes (bool): Whether to cut out the predicted regions from the input images.
             bounding_box (bool): Whether to include the bounding box coordinates in the output.
-            verbose (bool): Whether to print progress messages during the inference process.
+            verbose (bool): Whether to print progress bar during the inference process.
         
         Returns:
             list: The inference results. They contain images with drawn regions, vignettes, probability maps, paths and names.
@@ -623,9 +634,9 @@ class Predictor(ModelUser):
         for result in tqdm(self.results, desc= _DESC_PROGRESSBAR_POSTPROCESS, disable= not verbose):
             self._render(result)
             if drawRegions:
-                self.__class__._drawRegions(result, bounding_box, verbose)
+                self.__class__._drawRegions(result, bounding_box)
             if cutVignettes:
-                self.__class__._cutVignettes(result, bounding_box, verbose)
+                self.__class__._cutVignettes(result, bounding_box)
         self._saveResults()
         _LOGGER.info(f"Results can be found in {self.output_dir}")
         return self.results

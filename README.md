@@ -1,8 +1,11 @@
-Deep-Agora
-==========
+**Deep-Agora**
+==============
+*Supervised by Prof. Dr. Jean-Yves RAMEL and conducted by Théo BOISSEAU at Ecole Polytechnique de l'Université de Tours.*
 
-*Supervised by Prof. Dr. Jean-Yves RAMEL and conducted by Théo BOISSEAU - Ecole Polytechnique de l'Université de Tours.*
 
+
+Introduction
+============
 Overhaul of Agora from the PaRADIIT Project: Analyzing Pattern Redundancy in texts of document images using Incremental Segmentation.
 
 PaRADIIT is a project initiated and sponsored by 2 successive Google DH awards. It aims to turn ancient books, especially from the Renaissance, into accessible digital libraries.
@@ -15,37 +18,46 @@ The objective of this project is to start an overhaul of the Agora software with
 Project structure
 -----------------
 
-    deep_learning_dev/              # directory for development of deep learning project
-    ├── deep_learning_lab/          # package for deep learning lab
-    │   ├── data_preparation/       # package for data preparation
-    │   │   ├── __init__.py         # file to indicate this directory can be used as a package
-    │   │   ├── orchestration.py    # module for coordinating the data preparation process
-    │   │   ├── patch.py            # module for applying patches to images
-    │   │   └── xml_parser.py       # module for parsing xml files
-    │   ├── __init__.py             # file to indicate this directory can be used as a package
-    │   ├── gpu_setup.py            # module for setting up GPU
-    │   ├── logging.py              # module for logging information
-    │   └── model.py                # module for defining deep learning model
-    ├── download_data.sh            # script to download data
-    └── image_segmentation.ipynb    # Jupyter notebook for image segmentation
-    .gitignore                      # specifies files to ignore when committing to git
-    README.md                       # readme file for the project
-    environment.yml                 # conda environment file to create a conda environment
-    setupjy.py                      # setup file for the project
+    deep-agora
+    ├── deep_learning_dev/              # working directory for development of the data science project
+    │   ├── deep_learning_lab/          # package for deep learning lab
+    │   │   ├── data_preparation/       # subpackage of deep learning lab for data preparation
+    │   │   │   ├── __init__.py         # file to indicate this directory can be used as a package
+    │   │   │   ├── orchestration.py    # module for coordinating the data preparation process
+    │   │   │   ├── patch.py            # module for applying patches to images
+    │   │   │   └── xml_parser.py       # module for parsing xml files
+    │   │   ├── __init__.py             # file to indicate this directory can be used as a package
+    │   │   ├── gpu_setup.py            # module for setting up GPU
+    │   │   ├── logging.py              # module for logging information
+    │   │   └── model.py                # module for defining deep learning model
+    │   ├── raw_datasets/               # location to download raw data sets
+    |   ├── tests/                      # tests of deep_learning_lab designed for Pytest
+    |   │   ├── integration/            # integration tests
+    |   │   └── unit/                   # unit tests
+    │   ├── download_data.sh            # example of script to download data (incomplete)
+    │   └── image_segmentation.ipynb    # Jupyter notebook for image segmentation
+    ├── ...                             # future working directories (e.g. software development)
+    ├── dhSegment-torch/                # cloned repository of dhSegment-torch adapted to sm_86 CUDA architecture
+    |   ├── ...
+    |   ├── environment.yml             # conda environment file adapted to sm_86 CUDA architecture
+    |   └── setupjy.py                  # setup file adapted to sm_86 CUDA architecture
+    ├── .gitignore                      # specifies files to ignore when committing to git
+    └── README.md                       # readme file for the project
 
-`deep_learning_dev` is used to develop deep-learning models that will later be used for the Deep-Agora software.
+- `deep_learning_dev/` is a working directory of data science.
+It is designed to develop deep-learning models that will be used in the future working directory `deep_agora/` of software development.
+It includes the _**`deep_learning_lab`**_ package that allows a data scientist to prepare data, train deep neural networks and use them for inference on images.
+`image_segmentation.ipynb` can be used as an example or an application to use the package.
+- `dhSegment-torch/` is an external Deep-Learning framework cloned from the GitHub repository [dhSegment-torch](https://github.com/dhlab-epfl/dhSegment-torch).
+    >**dhSegment** is a tool for Historical Document Processing. Its generic approach allows to segment regions and extract content from different type of documents. Its environment files have been edited to adapt to sm_86 CUDA architecture.
 
-It includes an API called `deep_learning_lab` that allows a data scientist to prepare data, train deep neural networks and use them.
-
-`image_segmentation.ipynb` can be used as an exemple or an application to use the API.
 
 
 Deep Learning Dev.
 ==================
-
 Requirements
 ------------
-Your machine must have a GPU and CUDA installed. We recommend using a server to work in the *deep_learning_dev* directory as the processing time can be very long (at least hours).
+We highly recommend using a machine with a GPU to work in the *deep_learning_dev* directory as the processing time can be very long (many hours).
 
 Check if you have a GPU and CUDA installed via the NVIDIA System Management Interface (NVIDIA-SMI) driver by entering in your terminal:
 
@@ -56,33 +68,49 @@ You must also have Conda installed in order to perform the following installatio
 
 Installation
 ------------
-The _**`deep_learning_lab`**_ package uses the framework [dhSegment-torch](https://github.com/dhlab-epfl/dhSegment-torch), please follow the same installation guide:
->dhSegment will not work properly if the dependencies are not respected. In particular, inaccurate dependencies may result in an inability to converge, even if no error is displayed. Therefore, we highly recommend to create a dedicated environment as following :
+The _**`deep_learning_lab`**_ package uses the framework [dhSegment-torch](https://github.com/dhlab-epfl/dhSegment-torch).
+
+We edited its environment files (`environment.yml` and `setup.py`) for compatibility with the sm_86 CUDA architecture of our machine. To apply such changes, do as follows:
+
+    cp environment.yml dhSegment-torch/
+    cp setup.py dhSegment-torch/
+
+Now, to install it, go to `dhSegment-torch/` as follows:
+    
+    cd dhSegment-torch
+
+And follow [its installation guide](https://github.com/dhlab-epfl/dhSegment-torch#installation):
+>Installation
+>------------
+>dhSegment will not work properly if the dependencies are not respected. In particular, inaccurate dependencies may result in an inability to converge, even if no error is displayed. Therefore, we highly recommend to create a dedicated environment as follows:
 >
 >```
 >conda env create --name dhs --file environment.yml
 >source activate dhs
 >python setup.py install
 >```
-Note that the environment.yml file might have been modified for compatibility with our GPU server.
 
 
-### Data preparation
-Raw datasets can be placed in a `raw_datasets` folder, located in the same place as the executable.
+Data preparation
+----------------
+Raw datasets can be placed in a `raw_datasets/` folder, located in the working directory.
 They usually contain images and XML files containing their annotations.
 These annotation files cannot be used directly to train the model because they must be converted to masks.
 
 For this reason, the _**`deep_learning_lab.data_preparation`**_ package allows the developer to select and use labels from their raw datasets to build masks.
-A dataset to be patched must be specified in the API by its main directory, its image directory and its annotation directory.
+A dataset to be patched must be specified by its main directory, its image directory and its annotation directory.
+For the moment, some default datasets are implemented inside the source code of the **`deep_learning_lab.data_preparation.Orchestrator`** package.
+To be used, these default datasets must already have been downloaded.
 It can either be added to the defaults datasets of the **`deep_learning_lab.orchestration`** module or be added via the *`Orchestrator.ingestDatasets`* method.
 
 By default, the patched dataset is in the *results* folder and in the sub-folder named after the *"specified labels"*, under the name *training_data*.
 For example: if you patched a dataset with TextLine label, the dataset will be at the location *results/TextLine/training_data/*.
 
 
-### Training
-Before any use of the trainer provided by the dhSegment library, you must ensure that you are correctly using your GPU.
-To do this, the `deep_learning_lab.gpu_setup` module provides the user with the *`cudaDeviceSelection`* method which allows them to select or pre-select the GPU they wish to use.
+Training
+--------
+Before any use of the trainer provided by the dhSegment library, you must specify if you want to a GPU and which one.
+To do this, the **`deep_learning_lab.gpu_setup`** module allows the selection of a GPU/CPU in backend.
 
 The `Trainer` class from the **`deepl_learning_lab.model`** module can then be instanciated with a specified set of labels to segment and the dataset to use.
 The trainer can be configured with many parameters relating to the split of the validation and test sets or to the training of the model itself.
@@ -92,7 +120,8 @@ This allows greater modularity for future Deep-Agora software.
 By default, the dataset to be used is *training_data* (*results/"specified labels"/training_data*). The *model* and *tensorboard* directories should be in the same location. *model* contains the best serialized models and *tensorboard* contains the logs of the metrics acquired during the training.
 
 
-### Inference
+Inference
+---------
 The `Predictor` class from the **`deepl_learning_lab.model`** module can be instanciated with a specified set of labels to segment.
 
 By default, the input data is *inference_data* and the output is the directory *predictions*. The output directory contains the vignettes extracted from the images.
@@ -100,9 +129,10 @@ By default, the input data is *inference_data* and the output is the directory *
 Note that the post-processing of the inference results only supports one label for the moment.
 
 
-### Data
+Data
+----
 `download_data.sh` is just an example of how to download data for the project.
-However, it cannot include all the necessary datasets for good performances of the model since many datasets cannot be downloaded as easily.
+It is unlikely that such a script could include all the datasets needed for good model performance, as many datasets cannot be downloaded as easily.
 
 Most of the datasets used are from [3]
 
@@ -129,10 +159,22 @@ Some datasets that are accessible via IIIF (not supported yet):
 Pixel-labeled datasets have not yet been used because they require manual intervention: the colours and the labels must be the same as those patched.
 
 
+Tests
+-----
+For the moment, only integration tests of the classes of the _**`deep_learning_lab`**_ package have been implemented.
+To execute them, simply do as follows:
+
+    cd deep_learning_dev/
+    pytest
+
+
+
 References
 ==========
-1. [Deep-Agora_DOC](https://github.com/theo-boi/Deep-Agora_DOC.) for details about the specifications of the project.
-2. [dhSegment paper](https://arxiv.org/abs/1804.10371):
-    >S. Ares Oliveira, B.Seguin, and F. Kaplan, “dhSegment: A generic deep-learning approach for document segmentation”, in Frontiers in Handwriting Recognition (ICFHR), 2018 16th International Conference on, pp. 7-12, IEEE, 2018.
-3. [Datasets](https://arxiv.org/abs/2203.08504):
-    >K. Nikolaidou, M. Seuret, H. Mokayed and M. Liwicki, “A survey of historical document image datasets”, IJDAR 25, 305–338 (2022).
+[1] [deep-agora-doc](https://github.com/theo-boi/deep-agora-doc) for details about the specifications of the project.
+
+[2] [dhSegment paper](https://arxiv.org/abs/1804.10371):
+    S. Ares Oliveira, B.Seguin, and F. Kaplan, “dhSegment: A generic deep-learning approach for document segmentation”, in Frontiers in Handwriting Recognition (ICFHR), 2018 16th International Conference on, pp. 7-12, IEEE, 2018.
+
+[3] [Datasets](https://arxiv.org/abs/2203.08504):
+    K. Nikolaidou, M. Seuret, H. Mokayed and M. Liwicki, “A survey of historical document image datasets”, IJDAR 25, 305–338 (2022).
