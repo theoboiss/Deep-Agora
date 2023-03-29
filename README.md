@@ -96,9 +96,9 @@ And follow [its installation guide](https://github.com/dhlab-epfl/dhSegment-torc
 >   In particular, inaccurate dependencies may result in an inability to converge, even if no error is displayed.
 >   Therefore, we highly recommend to create a dedicated environment as follows:
 >
->       conda env create --name dhs --file environment.yml
->       source activate dhs
->       python setup.py install
+>     conda env create --name dhs --file environment.yml
+>     source activate dhs
+>     python setup.py install
 >
 
 
