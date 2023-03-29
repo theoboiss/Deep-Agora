@@ -89,7 +89,7 @@ Now, to install package of the sub-module, go to `dhSegment-torch/` as follows:
     
     cd dhSegment-torch
 
-And follow [its installation guide](https://github.com/dhlab-epfl/dhSegment-torch#installation):
+And follow its [installation guide](https://github.com/dhlab-epfl/dhSegment-torch#installation):
 >   Installation
 >   ------------
 >   dhSegment will not work properly if the dependencies are not respected.
@@ -166,7 +166,7 @@ Some sources of datasets to patch are:
 - [ImageCLEF 2016](https://zenodo.org/record/52994)
 
 Some dataset that are already pixel-labeled (with arbitrary label and color):
-- [HBA](https://api.bnf.fr/hba-un-jeu-dimages-annotees-pour-lanalyse-de-la-structure-de-mise-en-page-douvrages-anciens)
+- [HBA](https://api.bnf.fr/hba-un-jeu-dimages-annotees-pour-lanalyse-de-la-structure-de-mise-en-page-douvrages-anciens) (very diverse)
 - [SynDoc](https://drive.google.com/file/d/1_goCKP5VeStjdDS0nGeZBPqPoLCMNyb6/view) (text lines, red)
 - [IllusHisDoc](https://www.dropbox.com/s/bbpb9lzanjtj9f9/illuhisdoc.zip?dl%3D0) (illustrations, red)
 - [DIVA-HisDB](https://diuf.unifr.ch/main/hisdoc/diva-hisdb.html) (various labels, red)
