@@ -8,7 +8,8 @@ Introduction
 ============
 Overhaul of Agora from the PaRADIIT Project: Analyzing Pattern Redundancy in texts of document images using Incremental Segmentation.
 
-PaRADIIT is a project initiated and sponsored by 2 successive Google DH awards. It aims to turn ancient books, especially from the Renaissance, into accessible digital libraries.
+PaRADIIT is a project initiated and sponsored by 2 successive Google DH awards.
+It aims to turn ancient books, especially from the Renaissance, into accessible digital libraries.
 
 The collaboration with the CESR resulted in the Agora software which simultaneously performs page layout analysis, text/graphics separation and pattern extraction.
 
@@ -48,8 +49,11 @@ Project structure
 It is designed to develop deep-learning models that will be used in the future working directory `deep_agora/` of software development.
 It includes the _**`deep_learning_lab`**_ package that allows a data scientist to prepare data, train deep neural networks and use them for inference on images.
 `image_segmentation.ipynb` can be used as an example or an application to use the package.
+
 - `dhSegment-torch/` is an external Deep-Learning framework cloned from the GitHub repository [dhSegment-torch](https://github.com/dhlab-epfl/dhSegment-torch).
-    >**dhSegment** is a tool for Historical Document Processing. Its generic approach allows to segment regions and extract content from different type of documents. Its environment files have been edited to adapt to sm_86 CUDA architecture.
+    >**dhSegment** is a tool for Historical Document Processing.
+Its generic approach allows to segment regions and extract content from different type of documents.
+Its environment files have been edited to adapt to sm_86 CUDA architecture.
 
 
 
@@ -68,30 +72,34 @@ You must also have Conda installed in order to perform the following installatio
 
 Installation
 ------------
-The _**`deep_learning_lab`**_ package uses the sub-module and framework [dhSegment-torch](https://github.com/dhlab-epfl/dhSegment-torch).
-Clone the sub-module as follows:
+The _**`deep_learning_lab`**_ package uses the sub-module and framework *dhSegment-torch* [[2]](#references).
 
+Go to `dependencies/` and clone the sub-module(s) as follows:
+
+    cd dependencies/
     git submodule update --init --recursive
 
-We edited its environment files (`environment.yml` and `setup.py`) for compatibility with the sm_86 CUDA architecture of our machine. To apply such changes, do as follows:
+We edited its environment files (`environment.yml` and `setup.py`) for compatibility with the sm_86 CUDA architecture of our machine.
+To apply such changes, do as follows:
 
     cp environment.yml dhSegment-torch/
     cp setup.py dhSegment-torch/
 
-Now, to install it, go to `dhSegment-torch/` as follows:
+Now, to install package of the sub-module, go to `dhSegment-torch/` as follows:
     
     cd dhSegment-torch
 
 And follow [its installation guide](https://github.com/dhlab-epfl/dhSegment-torch#installation):
->Installation
->------------
->dhSegment will not work properly if the dependencies are not respected. In particular, inaccurate dependencies may result in an inability to converge, even if no error is displayed. Therefore, we highly recommend to create a dedicated environment as follows:
+>   Installation
+>   ------------
+>   dhSegment will not work properly if the dependencies are not respected.
+>   In particular, inaccurate dependencies may result in an inability to converge, even if no error is displayed.
+>   Therefore, we highly recommend to create a dedicated environment as follows:
 >
->```
->conda env create --name dhs --file environment.yml
->source activate dhs
->python setup.py install
->```
+>       conda env create --name dhs --file environment.yml
+>       source activate dhs
+>       python setup.py install
+>
 
 
 Data preparation
@@ -102,12 +110,15 @@ These annotation files cannot be used directly to train the model because they m
 
 For this reason, the _**`deep_learning_lab.data_preparation`**_ package allows the developer to select and use labels from their raw datasets to build masks.
 A dataset to be patched must be specified by its main directory, its image directory and its annotation directory.
-For the moment, some default datasets are implemented inside the source code of the **`deep_learning_lab.data_preparation.Orchestrator`** package.
+
+For the moment, some default datasets are implemented inside the source code of the **`deep_learning_lab.data_preparation.orchestration`** module.
 To be used, these default datasets must already have been downloaded.
-It can either be added to the defaults datasets of the **`deep_learning_lab.orchestration`** module or be added via the *`Orchestrator.ingestDatasets`* method.
+Additional datasets can either be added to the defaults datasets in the source code of the module or via the *`Orchestrator.ingestDatasets`* method.
 
 By default, the patched dataset is in the *results* folder and in the sub-folder named after the *"specified labels"*, under the name *training_data*.
 For example: if you patched a dataset with TextLine label, the dataset will be at the location *results/TextLine/training_data/*.
+
+Note that the **`deep_learning_lab.data_preparation.patch`** module running in the backend of the *`Orchestrator`* class has not been validated for multi-labels at the moment.
 
 
 Training
@@ -120,16 +131,20 @@ The trainer can be configured with many parameters relating to the split of the 
 Note that as few labels as possible should be specified at a time so that a model can be developed for each of them.
 This allows greater modularity for future Deep-Agora software.
 
-By default, the dataset to be used is *training_data* (*results/"specified labels"/training_data*). The *model* and *tensorboard* directories should be in the same location. *model* contains the best serialized models and *tensorboard* contains the logs of the metrics acquired during the training.
+By default, the dataset to be used is *training_data* (*results/"specified labels"/training_data*).
+The *model* and *tensorboard* directories should be in the same location.
+*model* contains the best serialized models and *tensorboard* contains the logs of the metrics acquired during the training.
 
 
 Inference
 ---------
 The `Predictor` class from the **`deepl_learning_lab.model`** module can be instanciated with a specified set of labels to segment.
 
-By default, the input data is *inference_data* and the output is the directory *predictions*. The output directory contains the vignettes extracted from the images.
+By default, the input data is *inference_data* and the output directory is *predictions*.
+The output directory contains the vignettes extracted from the images.
+The output of the *`Predictor.start`* method returns additional data such as the original image on which the bounding boxes and polygons are drawn.
 
-Note that the post-processing of the inference results only supports one label for the moment.
+Note that the inference post-processing has only been validated for one label at the moment.
 
 
 Data
@@ -137,7 +152,7 @@ Data
 `download_data.sh` is just an example of how to download data for the project.
 It is unlikely that such a script could include all the datasets needed for good model performance, as many datasets cannot be downloaded as easily.
 
-Most of the datasets used are from [3]
+Most of the datasets bellow have been chosen from *A survey of historical document image datasets* [[3]](#references):
 
 Some sources of datasets to patch are:
 - [FCR](https://zenodo.org/record/3945088) (sub500)
@@ -174,10 +189,8 @@ To execute them, simply do as follows:
 
 References
 ==========
-[1] [deep-agora-doc](https://github.com/theo-boi/deep-agora-doc) for details about the specifications of the project.
+[1] [Details about the specifications of the project.](https://github.com/theo-boi/deep-agora-doc)
 
-[2] [dhSegment paper](https://arxiv.org/abs/1804.10371):
-    S. Ares Oliveira, B.Seguin, and F. Kaplan, “dhSegment: A generic deep-learning approach for document segmentation”, in Frontiers in Handwriting Recognition (ICFHR), 2018 16th International Conference on, pp. 7-12, IEEE, 2018.
+[2] [S. Ares Oliveira, B.Seguin, and F. Kaplan, “dhSegment: A generic deep-learning approach for document segmentation”, in Frontiers in Handwriting Recognition (ICFHR), 2018 16th International Conference on, pp. 7-12, IEEE, 2018.](https://arxiv.org/abs/1804.10371)
 
-[3] [Datasets](https://arxiv.org/abs/2203.08504):
-    K. Nikolaidou, M. Seuret, H. Mokayed and M. Liwicki, “A survey of historical document image datasets”, IJDAR 25, 305–338 (2022).
+[3] [K. Nikolaidou, M. Seuret, H. Mokayed and M. Liwicki, “A survey of historical document image datasets”, IJDAR 25, 305–338 (2022).](https://arxiv.org/abs/2203.08504)

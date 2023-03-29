@@ -1,3 +1,3 @@
-[submodule "dhSegment-torch"]
-	path = dhSegment-torch
+[submodule "dependencies/dhSegment-torch"]
+	path = dependencies/dhSegment-torch
 	url = https://github.com/dhlab-epfl/dhSegment-torch.git
