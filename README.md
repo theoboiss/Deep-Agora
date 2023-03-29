@@ -67,7 +67,10 @@ You must also have Conda installed in order to perform the following installatio
 
 Installation
 ------------
-The _**`deep_learning_lab`**_ package uses the framework [dhSegment-torch](https://github.com/dhlab-epfl/dhSegment-torch).
+The _**`deep_learning_lab`**_ package uses the sub-module and framework [dhSegment-torch](https://github.com/dhlab-epfl/dhSegment-torch).
+Clone the sub-module as follows:
+
+    git submodule update --init --recursive
 
 We edited its environment files (`environment.yml` and `setup.py`) for compatibility with the sm_86 CUDA architecture of our machine. To apply such changes, do as follows:
 
