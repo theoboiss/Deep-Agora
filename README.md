@@ -35,14 +35,13 @@ Project structure
     |   │   ├── integration/            # integration tests
     |   │   └── unit/                   # unit tests
     │   ├── download_data.sh            # example of script to download data (incomplete)
-    │   └── image_segmentation.ipynb    # Jupyter notebook for image segmentation
+    │   └── segmentation.ipynb          # Jupyter notebook for semantic segmentation
     ├── ...                             # future working directories (e.g. software development)
-    ├── dhSegment-torch/                # cloned repository of dhSegment-torch adapted to sm_86 CUDA architecture
-    |   ├── ...
-    |   ├── environment.yml             # conda environment file adapted to sm_86 CUDA architecture
-    |   └── setupjy.py                  # setup file adapted to sm_86 CUDA architecture
+    ├── dhSegment-torch/                # sub-module and framework for semantic segmentation
     ├── .gitignore                      # specifies files to ignore when committing to git
-    └── README.md                       # readme file for the project
+    ├── environment.yml                 # conda environment file adapted to sm_86 CUDA architecture
+    ├── README.md                       # readme file for the project
+    └── setupjy.py                      # setup file adapted to sm_86 CUDA architecture
 
 - `deep_learning_dev/` is a working directory of data science.
 It is designed to develop deep-learning models that will be used in the future working directory `deep_agora/` of software development.
