@@ -38,12 +38,13 @@ Project structure
     │   ├── download_data.sh            # example of script to download data (incomplete)
     │   └── segmentation.ipynb          # Jupyter notebook for semantic segmentation
     ├── ...                             # future working directories (e.g. software development)
-    ├── dhSegment-torch/                # sub-module and framework for semantic segmentation
+    ├── dependencies/                   # project dependencies
+    |   ├── dhSegment-torch/            # sub-module and framework for semantic segmentation
+    |   ├── environment.yml             # conda environment file adapted to sm_86 CUDA architecture
+    |   └── setupjy.py                  # setup file adapted to sm_86 CUDA architecture
     ├── .gitignore                      # specifies files to ignore when committing to git
-    ├── .gitmodules                     # specifies submodules
-    ├── environment.yml                 # conda environment file adapted to sm_86 CUDA architecture
-    ├── README.md                       # readme file for the project
-    └── setupjy.py                      # setup file adapted to sm_86 CUDA architecture
+    ├── .gitmodules                     # specifies submodules in dependencies/
+    └── README.md                       # readme file for the project
 
 - `deep_learning_dev/` is a working directory of data science.
 It is designed to develop deep-learning models that will be used in the future working directory `deep_agora/` of software development.
@@ -63,7 +64,7 @@ Requirements
 ------------
 We highly recommend using a machine with a GPU to work in the *deep_learning_dev* directory as the processing time can be very long (many hours).
 
-Check if you have a GPU and CUDA installed via the NVIDIA System Management Interface (NVIDIA-SMI) driver by entering in your terminal:
+Check if you have a GPU and CUDA installed via the [NVIDIA System Management Interface (NVIDIA-SMI) driver](https://www.nvidia.fr/Download/index.aspx) by entering in your terminal:
 
     nvidia-smi
 
@@ -80,6 +81,7 @@ Go to `dependencies/` and clone the sub-module(s) as follows:
     git submodule update --init --recursive
 
 We edited its environment files (`environment.yml` and `setup.py`) for compatibility with the sm_86 CUDA architecture of our machine.
+You can [match your GPU name to your CUDA architecture](https://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-cards/).
 To apply such changes, do as follows:
 
     cp environment.yml dhSegment-torch/
