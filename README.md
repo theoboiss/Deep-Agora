@@ -62,7 +62,7 @@ Deep Learning Dev.
 ==================
 Requirements
 ------------
-We highly recommend using a machine with a GPU to work in the *deep_learning_dev* directory as the processing time can be very long (many hours).
+We highly recommend using a machine with a GPU on Linux to work in the *deep_learning_dev* directory as the processing time can be very long (many hours).
 
 Check if you have a GPU and CUDA installed via the [NVIDIA System Management Interface (NVIDIA-SMI) driver](https://www.nvidia.fr/Download/index.aspx) by entering in your terminal:
 
