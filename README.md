@@ -32,16 +32,16 @@ Project structure
     │   │   ├── logging.py              # module for logging information
     │   │   └── model.py                # module for defining deep learning model
     │   ├── raw_datasets/               # location to download raw data sets
-    |   ├── tests/                      # tests of deep_learning_lab designed for Pytest
-    |   │   ├── integration/            # integration tests
-    |   │   └── unit/                   # unit tests
+    │   ├── tests/                      # tests of deep_learning_lab designed for Pytest
+    │   │   ├── integration/            # integration tests
+    │   │   └── unit/                   # unit tests
     │   ├── download_data.sh            # example of script to download data (incomplete)
     │   └── segmentation.ipynb          # Jupyter notebook for semantic segmentation
     ├── ...                             # future working directories (e.g. software development)
     ├── dependencies/                   # project dependencies
-    |   ├── dhSegment-torch/            # sub-module and framework for semantic segmentation
-    |   ├── environment.yml             # conda environment file adapted to sm_86 CUDA architecture
-    |   └── setupjy.py                  # setup file adapted to sm_86 CUDA architecture
+    │   ├── dhSegment-torch/            # sub-module and framework for semantic segmentation
+    │   ├── environment.yml             # conda environment file adapted to sm_86 CUDA architecture
+    │   └── setupjy.py                  # setup file adapted to sm_86 CUDA architecture
     ├── .gitignore                      # specifies files to ignore when committing to git
     ├── .gitmodules                     # specifies submodules in dependencies/
     └── README.md                       # readme file for the project
