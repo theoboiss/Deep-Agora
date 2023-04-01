@@ -38,12 +38,13 @@ Project structure
     │   ├── download_data.sh            # example of script to download data (incomplete)
     │   └── segmentation.ipynb          # Jupyter notebook for semantic segmentation
     ├── ...                             # future working directories (e.g. software development)
-    ├── dhSegment-torch/                # sub-module and framework for semantic segmentation
+    ├── dependencies/                   # project dependencies
+    |   ├── dhSegment-torch/            # sub-module and framework for semantic segmentation
+    |   ├── environment.yml             # conda environment file adapted to sm_86 CUDA architecture
+    |   └── setupjy.py                  # setup file adapted to sm_86 CUDA architecture
     ├── .gitignore                      # specifies files to ignore when committing to git
-    ├── .gitmodules                     # specifies submodules
-    ├── environment.yml                 # conda environment file adapted to sm_86 CUDA architecture
-    ├── README.md                       # readme file for the project
-    └── setupjy.py                      # setup file adapted to sm_86 CUDA architecture
+    ├── .gitmodules                     # specifies submodules in dependencies/
+    └── README.md                       # readme file for the project
 
 -   `deep_learning/` is a working directory of data science.
     It is designed to develop deep-learning models that will be used in the future working directory `deep_agora/` of software development.
@@ -63,7 +64,7 @@ Requirements
 ------------
 You need to use a Linux or WSL machine and we highly recommend using a machine with a GPU to work in the *deep_learning* directory as the processing time can be very long (many hours).
 
-Check if you have a GPU and CUDA installed via the NVIDIA System Management Interface (NVIDIA-SMI) driver by entering in your terminal:
+Check if you have a GPU and CUDA installed via the [NVIDIA System Management Interface (NVIDIA-SMI) driver](https://www.nvidia.fr/Download/index.aspx) by entering in your terminal:
 
     nvidia-smi
 
@@ -80,6 +81,7 @@ Go to `dependencies/` and clone the sub-module(s) as follows:
     git submodule update --init --recursive
 
 We edited its environment files (`environment.yml` and `setup.py`) for compatibility with the sm_86 CUDA architecture of our machine.
+You can [match your GPU name to your CUDA architecture](https://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-cards/).
 To apply such changes, do as follows:
 
     cp environment.yml dhSegment-torch/
@@ -89,7 +91,7 @@ Now, to install package of the sub-module, go to `dhSegment-torch/` as follows:
     
     cd dhSegment-torch
 
-And follow [its installation guide](https://github.com/dhlab-epfl/dhSegment-torch#installation):
+And follow its [installation guide](https://github.com/dhlab-epfl/dhSegment-torch#installation):
 >   Installation
 >   ------------
 >   dhSegment will not work properly if the dependencies are not respected.
@@ -114,6 +116,8 @@ A dataset to be patched must be specified by its main directory, its image direc
 For the moment, some default datasets are implemented inside the source code of the **`deep_learning_lab.data_preparation.orchestration`** module.
 To be used, these default datasets must already have been downloaded.
 Additional datasets can either be added to the defaults datasets in the source code of the module or via the *`Orchestrator.ingestDatasets`* method.
+
+In addition, to easily analyse the contents of a raw dataset, the *`Orchestrator.ingestLabels`* method provides a `prompt` parameter that allows the user to choose their labels and the *`Orchestrator.validate`* method prints statistics on each dataset and its contents.
 
 By default, the patched dataset is in the *results* folder and in the sub-folder named after the *"specified labels"*, under the name *training_data*.
 For example: if you patched a dataset with TextLine label, the dataset will be at the location *results/TextLine/training_data/*.
@@ -165,7 +169,7 @@ Some sources of datasets to patch are:
 - [ImageCLEF 2016](https://zenodo.org/record/52994)
 
 Some dataset that are already pixel-labeled (with arbitrary label and color):
-- [HBA](https://api.bnf.fr/hba-un-jeu-dimages-annotees-pour-lanalyse-de-la-structure-de-mise-en-page-douvrages-anciens)
+- [HBA](https://api.bnf.fr/hba-un-jeu-dimages-annotees-pour-lanalyse-de-la-structure-de-mise-en-page-douvrages-anciens) (very diverse)
 - [SynDoc](https://drive.google.com/file/d/1_goCKP5VeStjdDS0nGeZBPqPoLCMNyb6/view) (text lines, red)
 - [IllusHisDoc](https://www.dropbox.com/s/bbpb9lzanjtj9f9/illuhisdoc.zip?dl%3D0) (illustrations, red)
 - [DIVA-HisDB](https://diuf.unifr.ch/main/hisdoc/diva-hisdb.html) (various labels, red)
