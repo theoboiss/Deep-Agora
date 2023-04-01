@@ -20,7 +20,7 @@ Project structure
 -----------------
 
     deep-agora
-    ├── deep_learning_dev/              # working directory for development of the data science project
+    ├── deep_learning/                  # working directory for development of the data science project
     │   ├── deep_learning_lab/          # package for deep learning lab
     │   │   ├── data_preparation/       # subpackage of deep learning lab for data preparation
     │   │   │   ├── __init__.py         # file to indicate this directory can be used as a package
@@ -45,23 +45,23 @@ Project structure
     ├── README.md                       # readme file for the project
     └── setupjy.py                      # setup file adapted to sm_86 CUDA architecture
 
-- `deep_learning_dev/` is a working directory of data science.
-It is designed to develop deep-learning models that will be used in the future working directory `deep_agora/` of software development.
-It includes the _**`deep_learning_lab`**_ package that allows a data scientist to prepare data, train deep neural networks and use them for inference on images.
-`image_segmentation.ipynb` can be used as an example or an application to use the package.
+-   `deep_learning/` is a working directory of data science.
+    It is designed to develop deep-learning models that will be used in the future working directory `deep_agora/` of software development.
+    It includes the _**`deep_learning_lab`**_ package that allows a data scientist to prepare data, train deep neural networks and use them for inference on images.
+    `image_segmentation.ipynb` can be used as an example or an application to use the package.
 
-- `dhSegment-torch/` is an external Deep-Learning framework cloned from the GitHub repository [dhSegment-torch](https://github.com/dhlab-epfl/dhSegment-torch).
+-   `dhSegment-torch/` is an external Deep-Learning framework cloned from the GitHub repository [dhSegment-torch](https://github.com/dhlab-epfl/dhSegment-torch).
+    Its environment files have been edited to adapt to sm_86 CUDA architecture.
     >**dhSegment** is a tool for Historical Document Processing.
-Its generic approach allows to segment regions and extract content from different type of documents.
-Its environment files have been edited to adapt to sm_86 CUDA architecture.
+    >Its generic approach allows to segment regions and extract content from different type of documents.
 
 
 
-Deep Learning Dev.
-==================
+Deep Learning working directory
+===============================
 Requirements
 ------------
-We highly recommend using a machine with a GPU to work in the *deep_learning_dev* directory as the processing time can be very long (many hours).
+You need to use a Linux or WSL machine and we highly recommend using a machine with a GPU to work in the *deep_learning* directory as the processing time can be very long (many hours).
 
 Check if you have a GPU and CUDA installed via the NVIDIA System Management Interface (NVIDIA-SMI) driver by entering in your terminal:
 
@@ -155,8 +155,7 @@ It is unlikely that such a script could include all the datasets needed for good
 Most of the datasets bellow have been chosen from *A survey of historical document image datasets* [[3]](#references):
 
 Some sources of datasets to patch are:
-- [FCR](https://zenodo.org/record/3945088) (sub500)
-- [FCR](https://zenodo.org/record/4767732) (sub600)
+- [FCR](https://zenodo.org/record/3945088)
 - [ESPOSALLES](https://rrc.cvc.uab.es/?ch%3D10%26com%3Dintroduction)
 - [ICFHR19 RASM2019](https://bl.iro.bl.uk/concern/datasets/f866aefa-b025-4675-b37d-44647649ba71?locale%3Den)
 - [ScriptNet](https://zenodo.org/record/257972/)
@@ -182,7 +181,7 @@ Tests
 For the moment, only integration tests of the classes of the _**`deep_learning_lab`**_ package have been implemented.
 To execute them, simply do as follows:
 
-    cd deep_learning_dev/
+    cd deep_learning/
     pytest
 
 

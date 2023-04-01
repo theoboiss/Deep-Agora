@@ -108,9 +108,13 @@ class DataStructure:
             A list of absolute paths to the files with the specified extension in the directory.
 
         """
-        paths = glob.glob(os.path.join(dir, extension))
-        assert len(paths)
-        return sorted(paths)
+        paths = []
+        if not os.path.isdir(dir):
+            _LOGGER.warning(f"{dir} does not exist")
+        else:
+            paths.extend(glob.glob(os.path.join(dir, extension)))
+            paths = sorted(paths)
+        return paths
 
     
     def _wrapDirs(self, dir_data: str, dir_images: str, dir_labels: str, dir_annotations: str, child_dir_data: str = "") -> None:

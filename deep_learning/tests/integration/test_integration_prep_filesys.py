@@ -91,7 +91,7 @@ def test_orch_filesystem():
     
     # Initialize assertions
     is_result_dir = is_images_dir =  is_labels_dir = is_class_file = is_copied_image = is_mask = False
-    original_image = os.listdir(raw_data_dir)[0]
+    original_images = os.listdir(raw_data_dir)
     
     # Check that the file system has been correctly altered
     if os.path.isdir(result_dir_path):
@@ -107,9 +107,9 @@ def test_orch_filesystem():
             filepath = os.path.join(path, file)
             if filepath == os.path.join(path, "classfile.json"):
                 is_class_file = True
-            if filepath == os.path.join(path, original_image):
+            if filepath in map(lambda image: os.path.join(path, image), original_images):
                 is_copied_image = True
-            if file == original_image[:original_image.find('.jpg')]+'.png':
+            if file in map(lambda image: image[:image.find('.jpg')]+'.png', original_images):
                 is_mask = True
 
     # Assert that all checks pass

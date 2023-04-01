@@ -17,11 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 
-def cudaDeviceSelection(preselected_device: int = -1, device_order: str = "PCI_BUS_ID") -> int:
+def cudaDeviceSelection(preselected_device = None, device_order: str = "PCI_BUS_ID") -> int:
     """Select a CUDA device and set environment variables.
 
     Args:
-        preselected_device (int): The index of the device to use. Default is -1.
+        preselected_device: The index of the GPU device to use for computations. None promps the user and -1 is for CPU.
         device_order (str): The device order to use. Default is "PCI_BUS_ID".
 
     Raises:
@@ -45,7 +45,7 @@ def cudaDeviceSelection(preselected_device: int = -1, device_order: str = "PCI_B
         return -1
     
     # Select the preselected device if it is valid
-    if -1 <= preselected_device < num_cuda_devices:
+    if preselected_device != None and -1 <= preselected_device < num_cuda_devices:
         selected_device = preselected_device
     else:
         # If the preselected device is not valid, print the list of available devices
@@ -61,11 +61,10 @@ def cudaDeviceSelection(preselected_device: int = -1, device_order: str = "PCI_B
                 valid = True
 
     
-    # Log CUDA information using the cudaInfo function
-    _LOGGER.info(f"Infrastructure: %s", cudaInfo(selected_device).replace('\n', '; '))
-    
     # if CPU has been selected, GPU setup is ignored
     if selected_device == -1:
+        # Log CUDA information using the cudaInfo function
+        _LOGGER.info(f"Infrastructure: %s", cudaInfo(selected_device).replace('\n', '; '))
         return selected_device
     
     # Set the CUDA environment variables

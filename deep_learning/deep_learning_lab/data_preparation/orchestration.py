@@ -47,7 +47,7 @@ class Orchestrator:
             dir_images= "REID2019_ExampleSet",
             dir_annotations= "REID2019_ExampleSet"
         ),
-        'fcr': _pageDataStructure(os.path.join(RAW_DATA_DIR,"FCR_500","data")),
+        'fcr5': _pageDataStructure(os.path.join(RAW_DATA_DIR,"FCR_500","data")),
         'bcs_a': _pageDataStructure(os.path.join(RAW_DATA_DIR,_BCS,"ABP_FirstTestCollection")),
         'bcs_b': _pageDataStructure(os.path.join(RAW_DATA_DIR,_BCS,"Bohisto_Bozen_SetP")),
         'bcs_e': _pageDataStructure(os.path.join(RAW_DATA_DIR,_BCS,"EPFL_VTM_FirstTestCollection")),
@@ -65,6 +65,21 @@ class Orchestrator:
         'bcc_s': _pageDataStructure(os.path.join(RAW_DATA_DIR,_BCC,"StAM_Marburg_Grimm_SetP")),
         'bcc_u': _pageDataStructure(os.path.join(RAW_DATA_DIR,_BCC,"UCL_Bentham_SetP")),
         'bcc_un': _pageDataStructure(os.path.join(RAW_DATA_DIR,_BCC,"unibas_e-Manuscripta")),
+        'pinkas': patch.DataStructure(
+            dir_data= os.path.join(RAW_DATA_DIR, "pinkas_dataset"),
+            dir_images= "pinkas_dataset_images_and_xmls",
+            dir_annotations= "pinkas_dataset_images_and_xmls"
+        ),
+        'iehhr': patch.DataStructure(
+            dir_data= os.path.join(RAW_DATA_DIR, "IEHHR-XMLpages"),
+            dir_images= "train",
+            dir_annotations= "train"
+        ),
+        'clef': patch.DataStructure(
+            dir_data= os.path.join(RAW_DATA_DIR, "ImageCLEF 2016  pages_train_jpg"),
+            dir_images= "pages_train",
+            dir_annotations= os.path.join("../", "ImageCLEF 2016 pages_train_xml", "pages_train")
+        )
     }
     
     
@@ -98,7 +113,7 @@ class Orchestrator:
     
     
     @classmethod
-    def _implementDataStructure(cls, dataset):
+    def _implementDataStructure(cls, dataset, raw= False):
         """Class method to create a DataStructure object corresponding to a given dataset.
 
         Args:
@@ -122,6 +137,10 @@ class Orchestrator:
             return patch.DataStructure(*dataset)
         
         elif isinstance(dataset, dict):
+            if raw and not set(dataset.keys()) == {'dir_data', 'dir_images', 'dir_annotations'}:
+                value_error = ValueError(f"Raw dataset must contain 'dir_data', 'dir_images' and 'dir_annotations' keys")
+                _LOGGER.error(f"{repr(value_error)}: {str(dataset)}")
+                raise value_error
             return patch.DataStructure(**dataset)
 
         elif isinstance(dataset, str):
@@ -186,7 +205,7 @@ class Orchestrator:
             add_defaults (bool, optional): If True, add all default datasets to the list of data structures. Defaults to True.
         
         """
-
+        
         # Check if output is an instance of DataStructure, if not, create a DataStructure object
         self.output = self.__class__._implementDataStructure(self.output)
         
@@ -202,7 +221,7 @@ class Orchestrator:
 
         # Load and add all datasets to the list of data structures
         for data in datasets:
-            self.data_structures.append(self.__class__._implementDataStructure(data))
+            self.data_structures.append(self.__class__._implementDataStructure(data, raw= True))
     
     
     def ingestLabels(self, uniform_set_labels= [], prompt: bool = True) -> None:
@@ -293,9 +312,8 @@ class Orchestrator:
 
         # Loop through data structures and their labels
         for data_structure, set_labels in self.data_specs:
+            msg = f"PATCHING `{data_structure}` WITH {'`'+', '.join(set_labels)+'`' if set_labels else 'NO'} SPECIFIED LABEL{'S' if len(set_labels)>1 else ''}"
             if set_labels:
-                # Prepare message for patching
-                msg = f"PATCHING `{data_structure}` WITH {'`'+', '.join(set_labels)+'`' if set_labels else 'NO'} SPECIFIED LABEL{'S' if len(set_labels)>1 else ''}"
                 _LOGGER.info(msg)
                 if print_msg:
                     print(msg)
@@ -316,7 +334,7 @@ class Orchestrator:
                     print()
             else:
                 # Prepare message for skipping patching
-                msg = f"NOT PATCHING `{data_structure}` AS THERE ARE NO ANNOTATIONS FOR THESE LABELS"
+                msg = f"NOT {msg} AS THERE ARE NO ANNOTATIONS FOR THESE LABELS"
                 _LOGGER.info(msg)
                 if print_msg:
                     print(msg)

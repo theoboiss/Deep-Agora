@@ -47,7 +47,7 @@ class ModelUser(ABC):
 
         Args:
             labels (iterable): Iterable of labels used in the model.
-            preselected_device (int): The index of the GPU device to use for computations (-1 => CPU). Default is -1.
+            preselected_device: The index of the GPU device to use for computations. None promps the user and -1 is for CPU.
             input_dir (str): Name of the input directory.
             working_dir (str, optional): Name of the working directory. Defaults to "results".
 
@@ -82,7 +82,7 @@ class Trainer(ModelUser):
             input_dir (str): The directory name of the patched dataset in the working_dir. Default is "training_data".
             train_ratio (float): The ratio of data to use for training (between 0.0 and 1.0). Default is 0.80.
             val_ratio (float): The ratio of data to use for validation (between 0.0 and 1.0-train_ratio). Default is 0.10.
-            preselected_device (int): The index of the GPU device to use for computations (-1 => CPU). Default is -1.
+            preselected_device: The index of the GPU device to use for computations. None promps the user and -1 is for CPU. Default is 0.
             working_dir (str): The directory name of the resources and outputs. Default is "results".
 
         """

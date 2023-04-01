@@ -166,7 +166,7 @@ def test_training(setup_train_env):
         input_dir= "test_data",
         train_ratio= 0.5,
         val_ratio= 0.5,
-        preselected_device= 1,
+        preselected_device= -1,
         working_dir= patch.RESULT_DIR
     )
     
@@ -259,7 +259,7 @@ def test_inference(setup_infer_env):
     predictor = model.Predictor(
         set_labels,
         input_dir= os.path.join("test_data", "images"),
-        preselected_device= 1,
+        preselected_device= -1,
         working_dir= patch.RESULT_DIR
     )
     results = predictor.start(verbose= False)
