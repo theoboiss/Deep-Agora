@@ -172,28 +172,29 @@ class Orchestrator:
         n_labels = stats_files.pop("N_LABELS")
         number_labels = stats_files.pop("LABELS")
         
-        if verbose:
+        answer = ""
+        if verbose >= 1:
             if number_labels:
-                if verbose >= 1:
-                    print(', '.join((str(number)+' '+label for label, number in number_labels.items())))
+                answer += ', '.join((str(number)+' '+label for label, number in number_labels.items())) + '\n'
+                for file, stats in stats_files.items():
+                    filename = os.path.basename(file)
+                    if stats['N_LABELS']:
 
-                    if verbose >= 2:
-                        for file, stats in stats_files.items():
-                            filename = os.path.basename(file)
-                            if stats['N_LABELS']:
-                                print(f"\t{filename} ({stats['N_LABELS']})")
+                        if verbose >= 3:
+                            answer += f"\t{filename} ({stats['N_LABELS']})" + '\n'
 
-                                if verbose >= 3:
-                                    for label, number in stats['LABELS'].items():
-                                        if number:
-                                            print(f"\t\t{number} {label}")
+                            if verbose >= 4:
+                                for label, number in stats['LABELS'].items():
+                                    if number:
+                                        answer += f"\t\t{number} {label}" + '\n'
 
-                            elif verbose >=4:
-                                print(f"\t{filename} ({stats['N_LABELS']})")
-            else:
-                print("No label")
+                    elif verbose >= 5:
+                        answer += f"\t{filename} ({stats['N_LABELS']})" + '\n'
+                        
+            elif verbose >= 2:
+                answer += "No label" + '\n'
                 
-        return dict(stats_files, N_UNIQUE_LABELS= n_unique_labels, N_LABELS= n_labels, LABELS= number_labels)
+        return answer, dict(stats_files, N_UNIQUE_LABELS= n_unique_labels, N_LABELS= n_labels, LABELS= number_labels)
     
     
     def ingestDatasets(self, datasets= [], add_defaults: bool = True) -> None:
@@ -264,12 +265,12 @@ class Orchestrator:
                 set_labels[:] = chosen_labels
     
     
-    def validate(self, auto_yes: bool = False, verbose: bool = True):
+    def validate(self, auto_yes: bool = False, verbose: int = 1):
         """Validate the labels and datasets by calculating statistics for the selected annotations.
 
         Args:
             auto_yes (bool, optional): automatically validate the labels and datasets without user confirmation.
-            verbose (bool, optional): the level of verbosity. If True, will print the statistics of each dataset.
+            verbose (int, optional): the level of verbosity. If strictly positive, will print the statistics of each dataset.
         
         """
         if not auto_yes:
@@ -279,9 +280,11 @@ class Orchestrator:
             # Calculate statistics for the selected annotations and print them to the console
             for data_structure, set_labels in self.data_specs:
                 ae = patch.AnnotationEncoder(data_structure.dir_annotations)
-                print(f"VALIDATION OF `{data_structure}`")
-                self.__class__._analyze(ae.calculateStatistics(set_labels), verbose)
-                print()
+                msg = f"VALIDATION OF `{data_structure}`"
+                answer, _ = self.__class__._analyze(ae.calculateStatistics(set_labels), verbose)
+                if answer:
+                    print(msg)
+                    print(answer)
             
         if not auto_yes:
             decision = input("Validate ([y]/n)? ").lower()
