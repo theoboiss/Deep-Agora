@@ -16,7 +16,6 @@ Notes:
 """
 
 import numpy as np
-import pandas as pd
 from PIL import Image, ImageDraw
 from tqdm import tqdm
 import os, glob
