@@ -160,8 +160,7 @@ Most of the datasets bellow have been chosen from *A survey of historical docume
 
 Some sources of datasets to patch are:
 - [FCR](https://zenodo.org/record/3945088)
-- [ESPOSALLES](https://rrc.cvc.uab.es/?ch%3D10%26com%3Dintroduction)
-- [ICFHR19 RASM2019](https://bl.iro.bl.uk/concern/datasets/f866aefa-b025-4675-b37d-44647649ba71?locale%3Den)
+- [ICFHR19](https://rrc.cvc.uab.es/?ch%3D10%26com%3Dintroduction)
 - [ScriptNet](https://zenodo.org/record/257972/)
 - [REID2019](https://www.primaresearch.org/datasets/REID2019)
 - [REID2017](https://www.primaresearch.org/datasets/REID2017)
