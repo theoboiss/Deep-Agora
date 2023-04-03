@@ -127,8 +127,8 @@ Note that the **`deep_learning_lab.data_preparation.patch`** module running in t
 
 Training
 --------
-Before any use of the trainer provided by the dhSegment library, you must specify if you want to a GPU and which one.
-To do this, the **`deep_learning_lab.gpu_setup`** module allows the selection of a GPU/CPU in backend.
+Before training, you must specify if you want to use a CPU, a GPU and which one.
+To do this, the **`deep_learning_lab.gpu_setup`** module allows the selection of a GPU/CPU in backend when instanciating the `Trainer` class.
 
 The `Trainer` class from the **`deepl_learning_lab.model`** module can then be instanciated with a specified set of labels to segment and the dataset to use.
 The trainer can be configured with many parameters relating to the split of the validation and test sets or to the training of the model itself.
