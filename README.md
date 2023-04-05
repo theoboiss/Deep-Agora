@@ -167,6 +167,32 @@ Some sources of datasets to patch are:
 - [Pinkas](https://zenodo.org/record/3569694)
 - [ImageCLEF 2016](https://zenodo.org/record/52994)
 
+And their content:
+| Dataset | TextLine | TextRegion | Word | ImageRegion |
+|---|---|---|---|---|
+| FCR_500/data | 32177 | 1701 | - | - |
+| ABP_FirstTestCollection | 961 | 226 | - | - |
+| Bohisto_Bozen_SetP | 815 | 152 | - | - |
+| EPFL_VTM_FirstTestCollection | 252 | 38 | - | - |
+| HUB_Berlin_Humboldt | 693 | 81 | - | - |
+| NAF_FirstTestCollection | 930 | 164 | - | - |
+| StAM_Marburg_Grimm_SetP | 857 | 214 | - | - |
+| UCL_Bentham_SetP | 1024 | 191 | - | - |
+| unibas_e-Manuscripta | 848 | 96 | - | - |
+| ABP_FirstTestCollection | 4230 | 30 | - | - |
+| Bohisto_Bozen_SetP | 910 | 26 | - | - |
+| BHIC_Akten | 2339 | 30 | - | - |
+| EPFL_VTM_FirstTestCollection | 2790 | 28 | - | - |
+| HUB_Berlin_Humboldt | 885 | 28 | - | - |
+| NAF_FirstTestCollection | 6147 | 29 | - | - |
+| StAM_Marburg_Grimm_SetP | 1064 | 30 | - | - |
+| UCL_Bentham_SetP | 2294 | 31 | - | - |
+| unibas_e-Manuscripta | 1081 | 20 | - | - |
+| pinkas_dataset | 1013 | 175 | 13744 | - |
+| IEHHR-XMLpages | 3070 | 968 | 31501 | - |
+| ImageCLEF 2016 pages_train_jpg | 9645 | 765 | - | - |
+| REID2019 | - | 454 | - | 3 |
+
 Some dataset that are already pixel-labeled (with arbitrary label and color):
 - [HBA](https://api.bnf.fr/hba-un-jeu-dimages-annotees-pour-lanalyse-de-la-structure-de-mise-en-page-douvrages-anciens) (very diverse)
 - [SynDoc](https://drive.google.com/file/d/1_goCKP5VeStjdDS0nGeZBPqPoLCMNyb6/view) (text lines, red)
