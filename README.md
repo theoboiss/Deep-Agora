@@ -167,7 +167,7 @@ Some sources of datasets to patch are:
 - [Pinkas](https://zenodo.org/record/3569694)
 - [ImageCLEF 2016](https://zenodo.org/record/52994)
 
-And their content:
+And here is their content:
 | Dataset | TextLine | TextRegion | Word | ImageRegion |
 |---|---|---|---|---|
 | FCR_500/data | 32177 | 1701 | - | - |
