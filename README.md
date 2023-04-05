@@ -41,7 +41,7 @@ Project structure
     ├── dependencies/                   # project dependencies
     │   ├── dhSegment-torch/            # sub-module and framework for semantic segmentation
     │   ├── environment.yml             # conda environment file adapted to sm_86 CUDA architecture
-    │   └── setupjy.py                  # setup file adapted to sm_86 CUDA architecture
+    │   └── setup.py                  # setup file adapted to sm_86 CUDA architecture
     ├── .gitignore                      # specifies files to ignore when committing to git
     ├── .gitmodules                     # specifies submodules in dependencies/
     └── README.md                       # readme file for the project
